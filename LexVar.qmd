@@ -1,0 +1,143 @@
+---
+title: "Facilitative effects of label variation on young children's word learning"
+shorttitle: "Effects of label variation on word learning"
+author:
+  - name: Kennedy Casey
+    corresponding: true
+    orcid: 0000-0001-5326-3080
+    email: kcasey@princeton.edu
+    affiliations:
+      - name: Princeton University
+        department: Department of Psychology
+        address: 40 Woodlands Way
+        city: Princeton
+        region: NJ
+        country: USA
+        postal-code: 08544
+  - name: Casey Lew-Williams
+    orcid: 0000-0002-8781-4458
+    email: caseylw@princeton.edu
+    affiliations:
+      - name: Princeton University
+        department: Department of Psychology
+        address: 40 Woodlands Way
+        city: Princeton
+        region: NJ
+        country: USA
+        postal-code: 08544
+author-note:
+  status-changes: 
+    affiliation-change: ~
+    deceased: ~
+  disclosures:
+    study-registration: ~
+    data-sharing: ~
+    related-report: ~
+    conflict-of-interest: ~
+    financial-support: ~
+    gratitude: ~
+    authorship-agreements: ~
+abstract: "This document is a template."
+keywords: [word learning, child-directed speech, wordplay, eye-tracking]
+bibliography: LexVar.bib
+format:
+  apaquarto-docx: default
+  apaquarto-html: default
+  apaquarto-pdf:
+    documentmode: man
+execute: 
+  echo: false
+  warning: false
+  message: false
+  error: false
+  eval: true
+
+---
+```{r setup}
+library(tidyverse)
+library(readxl)
+library(english)
+library(tools)
+library(flextable)
+```
+
+# Method
+Pre-registered ([(https://osf.io/uqz6d)](https://osf.io/uqz6d))
+
+```{r, echo=FALSE}
+log <- read_xlsx("data/metadata/ANON-ptcp-log.xlsx")
+final.sample <- filter(log, usable_checked == "y") 
+usable <- final.sample %>% nrow()
+unusable <- filter(log, usable_checked == "n") %>% nrow()
+unusable.lang <- filter(log, str_detect(exclusion_reason, "did not")) %>% nrow()
+unusable.cal <- filter(log, str_detect(exclusion_reason, "calibration")) %>% nrow()
+unusable.data <- filter(log, str_detect(exclusion_reason, "trial")) %>% nrow()
+unusable.inter <- filter(log, str_detect(exclusion_reason, "interruption")) %>% nrow()
+
+ethnicity <- final.sample %>%
+  mutate(ethnicity = case_when(
+    ethnicity %in% c("black", "asian", "not reported") ~ str_to_sentence(ethnicity), 
+    ethnicity == "white" ~ "Non-Latinx white", 
+    ethnicity == "white/hispanic" ~ "Latinx white", 
+    ethnicity %in% c("white/black", "asian/white", "mixed") ~ "Mixed race"
+  )) %>%
+  group_by(ethnicity) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(prop = round(n/sum(n)*100, 2)) %>%
+  arrange(desc(prop))
+```
+## Participants
+Participants (_N_ = `r usable`, age range = 18--36 months, *M*~age~ = `r format(round(mean(final.sample$age), 2), nsmall = 2)`) were full-term, monolingual English-hearing children (>80% reported exposure) with no known hearing, vision, language, and/or developmental delays. Caregivers self-reported race/ethnicity information for their children in an open-ended format when they initially signed up for our volunteer database. `r sub("^([a-z])", "\\U\\1", as.character(english(ethnicity[2,]$n)), perl = TRUE)` (`r ethnicity[2,]$prop`% of the final sample) caregivers chose not to report this information. Participants were primarily `r ethnicity[1,]$ethnicity` (_N_ = `r ethnicity[1,]$n`, `r ethnicity[1,]$prop`%) with some representation of other races/ethnicities: Mixed race (_N_ = `r ethnicity[2,]$n`, `r ethnicity[2,]$prop`%), Asian (_N_ = `r ethnicity[4,]$n`, `r ethnicity[4,]$prop`%), Black (_N_ = `r ethnicity[5,]$n`, `r ethnicity[5,]$prop`%), `r ethnicity[6,]$n` (_N_ = `r ethnicity[6,]$n`, `r ethnicity[6,]$prop`%).
+
+The final sample size was pre-registered and determined using an a priori power analysis conducted in G*Power [@faul2009statistical] and informed by prior eye-tracking studies with a similar age range [@nencheva2021moment; @quam2023protracted]. `r sub("^([a-z])", "\\U\\1", as.character(english(unusable)), perl = TRUE)` additional children participated but were excluded from the final analyses due to failure to meet the language requirement (_N_ = `r unusable.lang`), refusal to wear sticker or complete calibration (_N_ = `r unusable.cal`), significant interruption by family member (_N_ = `r unusable.inter`), or contribution of too few usable trials based on pre-registered criteria (_N_ = `r unusable.data`).
+
+## Stimuli
+A female native English speaker recorded the auditory stimuli using child-directed prosody in a sound-attenuated room.
+
+```{r stimuli-table}
+tribble(
+  ~Standard, ~Redup_Typical, ~Redup_Atypical, ~Dim_Typical, ~Dim_Atypical,
+  "tanzer\n/tæn.zɚ/", "tan-tan\n/tæn.tæn/", "zer-zer\n/zɚ.zɚ/", "tanny\n/tæn.i/", "y-zer\n/i.zɚ/",
+  "bogdum\n/bɑg.dʌm/", "bog-bog\n/bɑg.bɑg/", "dum-dum\n/dʌm.dʌm/", "boggy\n/bɑg.i/", "y-dum\n/i.dʌm/",
+  "kaisol\n/kaɪ.sɔl/", "kai-kai\n/kaɪ.kaɪ/", "sol-sol\n/sɔl.sɔl/", "kaisy\n/kaɪ.si/", "y-sol\n/i.sɔl/",
+  "mobet\n/moʊ.bɪt/", "mo-mo\n/moʊ.moʊ/", "bet-bet\n/bɪt.bɪt/", "moby\n/moʊ.bi/", "y-bet\n/i.bɪt/",
+  "woifer\n/wɔɪ.fɚ/", "woi-woi\n/wɔɪ.wɔɪ/", "fer-fer\n/fɚ.fɚ/", "woify\n/wɔɪ.fi/", "y-fer\n/i.fɚ/",
+  "voopin\n/vu.pɪn/", "voo-voo\n/vu.vu/", "pin-pin\n/pɪn.pɪn/", "voopy\n/vu.pi/", "y-pin\n/i.pɪn/"
+) %>% flextable() |>
+  set_table_properties(width = 1, layout = "autofit") |>
+  fontsize(size = 10, part = "all") |>
+  align(align = "left", part = "all")
+```
+
+The visual stimuli consisted of six isoluminant objects with 12 unique colors (two per object) that were modeled after @nencheva2021moment's stimuli and hand-drawn using Procreate software [@procreate].
+
+## Procedure
+Toddlers sat on their caregiver's lap, approximately 60cm away from an EyeLink 1000 Plus eye-tracker, in a dimly-lit experiment room. Caregivers wore opague sunglasses to prevent them from influencing their children's behavior. We used a simple 3-point calibration procedure.
+
+The experiment consisted of 3 blocks (one for each condition). 
+
+During the training trials (4 per block), children saw
+
+During the test trials (4 per block)
+
+## Data analysis
+
+# Results
+
+# Discussion
+
+# Conclusion
+
+# References
+
+<!-- References will auto-populate in the refs div below -->
+
+::: {#refs}
+:::
+
+# Funding
+This research was supported by a XXX awarded to CLW (XXX) and a National Science Foundation Graduate Research Fellowship awarded to KC. Additional personnel support was provided by the Princeton University Office of Undergraduate Research.
+
+# Acknowledgements
+We are grateful to the participating families as well as the members of the Princeton Baby Lab for their feedback on this work.
