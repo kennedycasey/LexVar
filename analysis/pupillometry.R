@@ -10,23 +10,23 @@ outdir <- "data/synchrony"
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
 # Step 1: Create trial meta (one row per condition/word/order)
+files <- list.files("data/processed/pupillometry", recursive = TRUE, full.names = TRUE)
 trial_meta <- tibble(
-  file = list.files("data/processed/pupillometry",
-                    recursive = TRUE, pattern = "\\.csv$", full.names = TRUE)
-) %>%
-  mutate(
-    fname     = basename(file),
-    condition = str_extract(fname, "^[a-z]+"),
-    word      = str_extract(fname, "_[a-z]+_") %>% str_remove_all("_"),
-    order     = str_extract(fname, "[0-9]+(?=\\.csv$)") %>% as.integer()
-  ) %>%
-  distinct(condition, word, order)
+  file = files,
+  participant = str_extract(file, "LexVar\\d+"),
+  fname = basename(file),
+  condition = str_extract(fname, "^[a-z]+"),
+  word = str_extract(fname, "_[a-z]+_") %>% str_remove_all("_"),
+  order = str_extract(fname, "(?<=_)[0-9]+(?=\\.csv$)")
+)
 
+trial_types <- trial_meta %>% distinct(condition, word)
 # Step 2: Parallel loop over all trials
-all_sync <- future_pmap_dfr(trial_meta, function(condition, word, order) {
-  outdir <- "data/synchrony"  
-  pattern <- paste0(condition, "_", word, "_", order, "\\.csv$")
-  files   <- list.files("data/processed/pupillometry", recursive = TRUE, pattern = pattern, full.names = TRUE)
+all_sync <- future_pmap_dfr(trial_types, function(condition, word) {
+  outdir <- "data/synchrony"
+  files   <- trial_meta %>%
+    filter(condition == !!condition, word == !!word) %>%
+    pull(file)
   
   if (length(files) < 2) return(tibble())
   # Extract participant IDs from path
@@ -79,13 +79,12 @@ all_sync <- future_pmap_dfr(trial_meta, function(condition, word, order) {
       participant = ids,
       condition   = condition,
       word        = word,
-      order       = order,
       exposure    = exp,
       synchrony   = sync_mean
     )
   }) %>%
     { # Save per-trial result
-      outfile <- glue("{outdir}/sync_{condition}_{word}_{order}.csv")
+      outfile <- glue("{outdir}/sync_{condition}_{word}.csv")
       write_csv(., outfile)
       .
     }
@@ -100,7 +99,10 @@ library(glmmTMB)
 # library(ggeffects) # Uncomment if plotting predictions
 
 # 1. Load Data
-sync_data <- read_csv("data/pupil_synchrony_by_trial.csv")
+sync_data <- read_csv("data/pupil_synchrony_by_trial.csv") %>%
+  group_by(participant, condition, word, exposure) %>%
+  summarise(mean_synchrony = mean(synchrony, na.rm = TRUE), .groups = "drop")
+
 test_data <- read_csv("data/test-props.csv")
 
 # 2. Prepare for Join
@@ -109,7 +111,7 @@ test_data <- read_csv("data/test-props.csv")
 sync_data <- sync_data %>%
   mutate(pid = gsub("ex", "", participant)) %>%
   group_by(pid, word, condition) %>%
-  summarize(mean_synchrony = mean(synchrony)) %>%
+  summarize(mean_synchrony = mean(mean_synchrony)) %>%
   ungroup() %>%
   mutate(sync_z = datawizard::standardize(mean_synchrony))
 
@@ -186,8 +188,4 @@ ggplot(combined_data_clean, aes(x = sync_z, y = acc_z, color = condition, fill =
 
 m_null <- lmer(acc_z ~ (1 | pid), data = combined_data_clean)
 m_sync <- lmer(acc_z ~ sync_z + (1 | pid), data = combined_data_clean)
-sync_model <- lmer(acc_z ~ sync_z + condition + (1 | pid), data = combined_data_clean)
-summary(sync_model)
-
-library(performance)
-check_model(sync_model)
+anova(m_null, m_sync)
