@@ -2,18 +2,24 @@ library(dtw)
 library(glue)
 library(furrr)
 library(slider)
-
-# full exposure sentence timings (switching to word-level for now)
-exposure_frames <- list(
-  "1" = 0:1450,
-  "2" = 3450:4800,
-  "3" = 8425:10000,
-  "4" = 11950:15000
-)
-
 # set a reproducible seed for all future workers
 options(future.rng.onMisuse = "error")
 set.seed(20250801)
+
+exposures.to.analyze <- c("1", "2", "3", "4")
+output.file.name <- "data/synchrony/combined/pupil-synchrony-all.csv"
+word.level = TRUE
+sentence.level = FALSE
+
+if(word.level) {
+  n.timepoints <- 150
+}
+
+if (sentence.level) {
+  n.timepoints <- 500
+}
+
+preprocess.pupil = TRUE
 
 # parallelize
 plan(multisession)
@@ -21,6 +27,7 @@ furrr_opts <- furrr_options(seed = TRUE)
 
 if (reprocess.pupil) {
   
+  if (word.level) {
   # get window times for each word exposure
   exposure.label.times <- read_csv("data/metadata/exposure-label-times.csv") %>%
     pivot_longer(
@@ -55,7 +62,7 @@ if (reprocess.pupil) {
       outdir <- "data/synchrony"
       
       # get relevant files for each participant
-      files   <- trial_meta %>%
+      files <- trial_meta %>%
         filter(condition == !!condition, word == !!word) %>%
         pull(file)
       
@@ -76,7 +83,7 @@ if (reprocess.pupil) {
       df$exposure <- NA_character_
       
       # for the relevant exposures ...
-      for (exp in c("1", "4")) {
+      for (exp in exposures.to.analyze) {
         timing <- exposure.label.times %>%
           filter(word == !!word, condition == !!condition, exposure == exp)
         
@@ -91,7 +98,7 @@ if (reprocess.pupil) {
     
     names(raw_list) <- participant_ids
     
-    exposures <- c("1", "4")
+    exposures <- exposures.to.analyze
     
     map_dfr(exposures, function(exp) {
       timing <- exposure.label.times %>%
@@ -125,7 +132,7 @@ if (reprocess.pupil) {
           df_exp <- df_exp %>% na.omit()
           
           # duration normalization - 100 time points per word
-          pts <- slice(df_exp, round(seq(1, n(), length.out = min(n(), 100))))$pupil_norm
+          pts <- slice(df_exp, round(seq(1, n(), length.out = min(n(), n.timepoints))))$pupil_norm
           
           if (sum(!is.na(pts)) < 2) return(NULL)
           
@@ -173,10 +180,126 @@ if (reprocess.pupil) {
       { # save per-trial result
         outfile <- glue("{outdir}/sync_{condition}_{word}.csv")
         write_csv(., outfile)
+        .
       }
   }, 
   .options = furrr_opts)
-  write_csv(all_sync, "data/pupil_synchrony_by_trial.csv")
+  write_csv(all_sync, output.file.name)
+  }
+  
+  if (sentence.level) {
+    exposure_frames <- list(
+      "1" = 0:1450,
+      "2" = 3450:4800,
+      "3" = 8425:10000,
+      "4" = 11950:15000
+    )
+    
+    outdir <- "data/synchrony"
+    dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
+    
+    # Metadata
+    files <- list.files("data/processed/pupillometry", recursive = TRUE, full.names = TRUE)
+    trial_meta <- tibble(
+      file = files,
+      participant = str_extract(file, "LexVar\\d+"),
+      fname = basename(file),
+      condition = str_extract(fname, "^[a-z]+"),
+      word = str_extract(fname, "_[a-z]+_") %>% str_remove_all("_"),
+      order = str_extract(fname, "(?<=_)[0-9]+(?=\\.csv$)")
+    )
+    
+    trial_types <- trial_meta %>% distinct(condition, word)
+    
+    all_sync <- future_pmap_dfr(
+      trial_types, 
+      function(condition, word) {
+      outdir <- "data/synchrony"
+      files <- trial_meta %>%
+        filter(condition == !!condition, word == !!word) %>%
+        pull(file)
+      
+      if (length(files) < 2) return(tibble())
+      participant_ids <- str_extract(files, "LexVar\\d+")
+      
+      raw_list <- map(files, ~ {
+        df <- read_csv(.x, show_col_types = FALSE) %>%
+          mutate(
+            participant = str_extract(.x, "LexVar\\d+"),
+            condition   = !!condition,
+            word        = !!word
+          )
+        df$exposure <- NA_character_
+        for (exp in exposures.to.analyze) {
+          frame_window <- exposure_frames[[exp]]
+          df$exposure[df$frame %in% frame_window] <- exp
+        }
+        df %>% filter(!is.na(exposure))
+      })
+      
+      names(raw_list) <- participant_ids
+      
+      map_dfr(exposures.to.analyze, function(exp) {
+        frame_window <- exposure_frames[[exp]]
+        
+        segs <- raw_list %>%
+          map(~ {
+            df_exp <- filter(.x, exposure == exp) %>% arrange(frame)
+            if (nrow(df_exp) < 2) return(NULL)
+            
+            df_exp <- df_exp %>%
+              complete(
+                frame = frame_window,
+                fill = list(
+                  participant = unique(df_exp$participant),
+                  condition   = unique(df_exp$condition),
+                  word        = unique(df_exp$word)
+                )
+              )
+            if (mean(is.na(df_exp$pupil_norm)) > 0.5) return(NULL)
+            df_exp <- df_exp %>% na.omit()
+            
+            pts <- slice(df_exp, round(seq(1, n(), length.out = min(n(), n.timepoints))))$pupil_norm
+            if (sum(!is.na(pts)) < 2) return(NULL)
+            pts
+          }) %>% compact()
+        
+        ids <- names(segs)
+        n   <- length(segs)
+        if (n < 2) return(tibble())
+        
+        pairs <- combn(seq_len(n), 2, simplify = FALSE)
+        dtw_dist <- function(x, y) {
+          tryCatch(dtw(x, y, distance.only = TRUE)$distance, error = function(e) NA_real_)
+        }
+        
+        dists <- future_map_dbl(pairs, function(idx) dtw_dist(segs[[idx[1]]], segs[[idx[2]]]), .options = furrr_opts)
+        dist_mat <- matrix(NA_real_, n, n, dimnames = list(ids, ids))
+        for (k in seq_along(pairs)) {
+          i <- pairs[[k]][1]; j <- pairs[[k]][2]
+          dist_mat[i, j] <- dist_mat[j, i] <- dists[k]
+        }
+        
+        max_d <- max(dist_mat, na.rm = TRUE)
+        sync_mat <- max_d - dist_mat
+        sync_mean <- rowMeans(sync_mat, na.rm = TRUE)
+        
+        tibble(
+          participant = ids,
+          condition   = condition,
+          word        = word,
+          exposure    = exp,
+          synchrony   = sync_mean
+        )
+      }) %>%
+        { 
+          outfile <- glue("{outdir}/sync_{condition}_{word}.csv")
+          write_csv(., outfile)
+        }
+    }, .options = furrr_opts)
+    
+    write_csv(all_sync, output.file.name)
+  }
 }
 
 # analysis ----------------------------------------------------------------
@@ -187,7 +310,7 @@ library(lmerTest)
 # library(ggeffects) # Uncomment if plotting predictions
 
 # 1. Load Data
-sync_data <- read_csv("data/pupil_synchrony_by_trial.csv") %>%
+sync_data <- read_csv(output.file.name) %>%
   group_by(participant, condition, word, exposure) %>%
   summarise(mean_synchrony = mean(synchrony, na.rm = TRUE), .groups = "drop")
 
