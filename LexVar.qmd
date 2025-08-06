@@ -30,8 +30,8 @@ author-note:
     study-registration: "The study design and analysis plan was pre-registered ([https://osf.io/uqz6d](https://osf.io/uqz6d))"
     data-sharing: "Anonymized data are available at LINK"
     conflict-of-interest: "The authors declare no conflicts of interest"
-    financial-support: ~
-    gratitude: ~
+    financial-support: "This research was supported by a XXX awarded to CLW (XXX) and a National Science Foundation Graduate Research Fellowship awarded to KC."
+    gratitude: ~ "We are grateful to the participating families as well as the members of the Princeton Baby Lab and Psychology of Language Lab for their feedback on this work."
     authorship-agreements: ~
 abstract: "This document is a template."
 keywords: [word learning, child-directed speech, wordplay, eye-tracking]
@@ -89,12 +89,12 @@ condition.colors <- c("stable" = "#ef5039",
 ```
 
 # Introduction
-Across many languages, speech addressed to infants and young children frequently includes vocabulary items unique or highly specific to this register [@bynon1968berber; @casagrande1948comanche; @ferguson1964baby; @han2023che; @mazuka2008japanese; @pye1968quiche; @sarvasy2025infant]. These register-specific lexical variants, also commonly referred to as "baby-talk words" or "infant- or child-directed vocabulary"...
+Across many languages, speech addressed to infants and young children frequently includes vocabulary items unique or highly specific to this register [@bynon1968berber; @casagrande1948comanche; @ferguson1964baby; @han2023che; @mazuka2008japanese; @pye1986quiche; @sarvasy2025child]. These register-specific lexical variants, also commonly referred to as "baby-talk words" or "infant- or child-directed vocabulary"...
 
-Multiple lexical variants have been shown to be used seemingly interchangeably in English child-directed speech [@caseyIPcorpus; @casey2022doggy; @moore2023wordform]. Earlier-learned words tend to be associated with more variation [@caseyIPcorpus; @moore2023wordform], suggesting that learners must contend with a relatively complicated linguistic landscape from early in development. How do multiple labels impact children’s word learning?
+Multiple lexical variants have been shown to be used seemingly interchangeably in English child-directed speech [@caseyIPcorpus; @casey2022doggy; @moore2024wordform]. Earlier-learned words tend to be associated with more variation [@caseyIPcorpus; @moore2024wordform], suggesting that learners must contend with a relatively complicated linguistic landscape from early in development. How do multiple labels impact children’s word learning?
 
 ## Label variation complicates early word learning
-The process of early word learning is traditionally framed as a one-to-one mapping problem—children learn to associate individual word forms (i.e., labels) with individual referents [@smith2008infants; but see also @wojcik2022map].
+The process of early word learning is traditionally framed as a one-to-one mapping problem—children learn to associate individual word forms (i.e., labels) with individual referents [@smith2008infant; but see also @wojcik2022map].
 
 ## Label variation facilitates early word learning
 Some features of child-directed variants have been linked with early learnability. Reduplicated word forms, which include repetition of full or partial syllables (e.g., *woof-woof*, *bow-wow*), are relatively common in child-directed speech [though estimated rates vary substantially across languages: CITES]. 
@@ -206,7 +206,6 @@ Auditory stimuli were recorded by female native English speaker using naturalist
 
 : Target word forms by variant type. {#tbl-stimuli}
 
-
 The visual stimuli consisted of six isoluminant objects with 12 unique colors (two per object) that were modeled after @nencheva2021moment's stimuli and hand-drawn using Procreate software [@procreate].
 
 ## Procedure
@@ -254,14 +253,13 @@ n.trials <- usable %>%
 
 ## Data pre-processing
 
-Gaze behavior was used to determine toddlers' recognition of novel word-object pairings during two critical windows of analysis (300ms-2000ms following each target word onset; @fernald2008looking; @swingley2000spoken). We calculated participants' proportion looking to target objects during test trials as the measure of word-recognition accuracy. For any given test trial to be included in analyses, children must have looked to the target and/or distractor object at least once prior to the onset of the label and for at least 1/3 of each critical post-labeling window. In order for a block to be included, children must have contributed usable data for at least 2 of 4 test trials. Finally, in order for a participant to be included, they must have contributed at least 2 of 3 blocks. On average, participants contributed `r n.trials$mean` trials (median = `r n.trials$median`, range = `r n.trials$min`--`r n.trials$max`) across `r n.conditions$mean` conditions (median = `r n.conditions$median`).
+Gaze behavior was used to determine toddlers' recognition of novel word-object pairings during two critical windows of analysis [300ms-2000ms following each target word onset, @fernald2008looking; @swingley2000spoken]. We calculated participants' proportion looking to target objects during test trials as the measure of word-recognition accuracy. For any given test trial to be included in analyses, children must have looked to the target and/or distractor object at least once prior to the onset of the label and for at least 1/3 of each critical post-labeling window. In order for a block to be included, children must have contributed usable data for at least 2 of 4 test trials. Finally, in order for a participant to be included, they must have contributed at least 2 of 3 blocks. On average, participants contributed `r n.trials$mean` trials (median = `r n.trials$median`, range = `r n.trials$min`--`r n.trials$max`) across `r n.conditions$mean` conditions (median = `r n.conditions$median`).
 
 Following @nencheva2021moment, we first converted toddlers' raw pupil size values during exposure sentences (automatically recorded by the EyeLink eye-tracker) to percent change the average pupil size for that trial. We removed potential artifacts due to partial blinks by excluding any 0.05-s intervals with more than 15% change in pupil size [@merritt1994artifact]. We used Stineman interpolation to fill in gaps shorter than 100 ms using Stineman interpolation [@stinepack]. Finally, we excluded segments where more than 50% of the data were missing.
 
 # Results
 
 ## Word recognition measured by gaze behavior
-
 ```{r test-prep}
 rewrite = FALSE
 path <- "data/processed/"
@@ -563,8 +561,8 @@ pred_summary <- as.data.frame(preds) %>%
   group_by(condition) %>%
   summarize(
     mean = mean(mu),
-    ci_lower = quantile(mu, 0.055),
-    ci_upper = quantile(mu, 0.945)
+    ci_lower = quantile(mu, probs = 0.055, names = FALSE),
+    ci_upper = quantile(mu, probs = 0.945, names = FALSE)
   )
 
 pred_summary1 <- as.data.frame(preds_window1) %>%
@@ -591,13 +589,13 @@ draws <- as_draws_df(m.age)
 summary <- summarize_draws(draws)
 ```
 
-Our primary analysis examines whether children successfully learned novel-word object mappings in our three experimental conditions. Using the `brms` package [@brms], we fit a mixed-effects zero-one inflated beta regression model[^1] to examine the effects of condition and age on children's accuracy of novel word recognition (i.e., proportion looking to the target object). The model included fixed effects for condition (atypical variation vs. typical variation vs. consistent) and mean-centered age, along with the maximal random effects structure (by-participant and by-item random slopes and intercepts). All R-hat values were 1.00, indicating good convergence. Effective sample sizes (Bulk ESS: `r round(min(summary$ess_bulk, na.rm = TRUE), 0)`--`r round(max(summary$ess_bulk, na.rm = TRUE), 0)`; Tail ESS: `r round(min(summary$ess_tail, na.rm = TRUE), 0)`--`r round(max(summary$ess_tail, na.rm = TRUE), 0)`) were sufficiently large, indicating stable and reliable posterior estimates.
+Our primary analysis examined whether children successfully learned novel-word object mappings in our three experimental conditions. Using the `brms` package [@brms], we fit a mixed-effects zero-one inflated beta regression model[^1] to examine the effects of condition and age on children's accuracy of novel word recognition (i.e., proportion looking to the target object). The model included fixed effects for condition (atypical variation vs. consistent vs. typical variation) and mean-centered age, along with the maximal random effects structure (by-participant and by-item random slopes and intercepts). All R-hat values were 1.00, indicating good convergence. Effective sample sizes (Bulk ESS: `r round(min(summary$ess_bulk, na.rm = TRUE), 0)`--`r round(max(summary$ess_bulk, na.rm = TRUE), 0)`; Tail ESS: `r round(min(summary$ess_tail, na.rm = TRUE), 0)`--`r round(max(summary$ess_tail, na.rm = TRUE), 0)`) were sufficiently large, indicating stable and reliable posterior estimates.
 
-[^1]: Beta regression was chosen to model the proportional dependent variable [@cribari2010beta]. We used a zero-one-inflated model since 0s and 1s are possible values in our data [@liu2018review]. Note that this particular modeling approach requires a Bayesian framework to interpret.
+[^1]: Beta regression was chosen to model the proportional dependent variable [@cribari2010beta]. Specifically, we used a zero-one-inflated model since 0s and 1s are common values in our data [@liu2018review]. Note that this particular modeling approach requires a Bayesian framework to interpret. Importantly, this analytic approach allows us to quantify evidence in support of the null hypothesis, not simply against it. A frequentist beta regression using the `glmmTMB` package [@glmmTMB] roughly approximated the same trend but is limited in two key ways: (a) this model cannot accurately capture boundary values [see @liu2018review for relevant discussion] and (b) this model fails to converge with the maximal random effects structure. Most relevant, removing the random slope of condition to achieve convergence reduces our ability to detect within-subject effects of condition.
 
 Following our pre-registered analysis plan, we tested whether including an interaction between condition and age improved model fit---we compared the model with the interaction term to the simpler additive model using approximate leave-one-out cross-validation [@loo]. This analysis suggested no reliable difference in predictive accuracy, providing no strong evidence that the interaction term improved model fit (ΔELPD = `r format(round(filter(comp, model == 2)$elpd_diff, 2), nsmall = 2)`, ΔSE = `r format(round(filter(comp, model == 2)$se_diff, 2), nsmall = 2)`).
 
-On average, model-predicted accuracy was highest in the typical variation condition (`r format(round(filter(pred_summary, condition == "naturalv")$mean, 2))`), followed by the consistent condition (`r format(round(filter(pred_summary, condition == "stable")$mean, 2))`), and lowest in the atypical variation condition (`r format(round(filter(pred_summary, condition == "unnaturalv")$mean, 2))`. However, the credible intervals for all conditions overlap substantially. **Figure 1** shows model-predicted accuracy for both critical windows.
+Children's performance was reliably above chance overall and in both critical windows across all conditions except for the first window for the atypical variation condition (_M_ = `r format(round(filter(pred_summary1, condition == "unnaturalv")$mean, 2))`, 89% CrI [`r format(round(filter(pred_summary1, condition == "unnaturalv")$ci_lower, 2))`, `r format(round(filter(pred_summary1, condition == "unnaturalv")$ci_upper, 2))`]). On average, across both critical windows, model-predicted accuracy was highest in the typical variation condition (_M_ = `r format(round(filter(pred_summary, condition == "naturalv")$mean, 2))`, 89% CrI [`r format(round(filter(pred_summary, condition == "naturalv")$ci_lower, 2))`, `r format(round(filter(pred_summary, condition == "naturalv")$ci_upper, 2))`]), followed by the consistent condition (_M_ = `r format(round(filter(pred_summary, condition == "stable")$mean, 2))`, 89% CrI [`r format(round(filter(pred_summary, condition == "stable")$ci_lower, 2))`, `r format(round(filter(pred_summary, condition == "stable")$ci_upper, 2))`]), and lowest in the atypical variation condition (_M_ = `r format(round(filter(pred_summary, condition == "unnaturalv")$mean, 2))`, 89% CrI [`r format(round(filter(pred_summary, condition == "unnaturalv")$ci_lower, 2))`, `r format(round(filter(pred_summary, condition == "unnaturalv")$ci_upper, 2))`]). However, the credible intervals for all conditions overlapped substantially, indicating limited evidence for condition effects. **Figure 1** shows model-predicted accuracy across conditions for the two critical windows.
 
 ```{r fig1, fig.cap="Figure 1. Posterior predicted accuracy by condition across both post-labeling time windows. Point ranges reflect posterior means with 89% credible intervals. Jittered dots show raw means for individual participants. Dotted line at 0.5 indicates chance looking.", fig.width=7, fig.height=6}
 
@@ -649,18 +647,16 @@ ggplot(pred_all, aes(x = condition, y = mean, ymin = ci_lower, ymax = ci_upper, 
 
 ```
 
-The beta component of the model, which estimates the effects on the mean outcome for non-boundary outcomes (i.e., values between but not including 0 or 1) showed small positive effects for both the natural variation condition (β = `r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall = 2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall = 2)`\]) and the consistent condition (β = `r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value, 2), nsmall = 2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall = 2)`\]), relative to the unnatural variation condition. Given that the credible intervals include zero, the results do not provide strong evidence for a condition effect. The effect of centered age was negligible (β = `r format(round(filter(m.age_summary, parameter == "b_age_c")$value, 2), nsmall = 2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_age_c")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_age_c")$value.upper, 2), nsmall = 2)`\])
+The beta component of the model, which estimates the effects on the mean outcome for non-boundary outcomes (i.e., values between but not including 0 or 1) showed small positive effects for both the typical variation condition (β = `r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall = 2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall = 2)`\]) and the consistent condition (β = `r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value, 2), nsmall = 2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall = 2)`\]), relative to the atypical variation condition. Given that the credible intervals include zero, the results do not provide strong evidence for a condition effect. The effect of centered age was negligible (β = `r format(round(filter(m.age_summary, parameter == "b_age_c")$value, 2), nsmall = 2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_age_c")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_age_c")$value.upper, 2), nsmall = 2)`\])
 
 The conditional one-inflation (coi) component, which predicts---among zero/one responses---the probability of being 1 (vs. 0), also showed similar trends for condition. The effect of the typical variation condition relative to atypical variation was weakly positive, and the credible intervals include zero (β = `r format(round(filter(m.age_summary, parameter == "b_coi_conditionnaturalv")$value, 2), nsmall = 2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_coi_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_coi_conditionnaturalv")$value.upper, 2), nsmall = 2)`\]). The effect of the stable condition relative to the atypical variation condition was stronger but still uncertain given the credible interval overlap with zero (β = `r format(round(filter(m.age_summary, parameter == "b_coi_conditionstable")$value, 2), nsmall = 2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_coi_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_coi_conditionstable")$value.upper, 2), nsmall = 2)`\]). The effect of age was clearly positive (β = `r format(round(filter(m.age_summary, parameter == "b_coi_age_c")$value, 2), nsmall = 2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_coi_age_c")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_coi_age_c")$value.upper, 2), nsmall = 2)`\]), indicating that older children were more likely to perform at ceiling (i.e., demonstrate 100% looking to the target object during the critical analysis window).
 
 ```{r main-effects-table-prep}
-# Helper to format mean and interval
 format_est <- function(df, param) {
   row <- filter(df, parameter == param)
   sprintf("%.2f [%.2f, %.2f]", row$value, row$value.lower, row$value.upper)
 }
 
-# Define parameter labels and tidybayes parameter names
 params <- tribble(
   ~Effect, ~Param,
   "mu: condition (typical variation)", "b_conditionnaturalv",
@@ -690,9 +686,9 @@ apa_table(summary_table, caption = "Table 2. Posterior means and 89% credible in
 
 ### Window effects
 
-In the early time window, there were no strong condition effects. The posterior estimate for the natural variation condition relative to atypical variation was β = `r format(round(filter(m.window1_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window1_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window1_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall = 2)`\]). Similarly, the consistent condition estimate was β = `r format(round(filter(m.window1_summary, parameter == "b_conditionstable")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window1_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window1_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall = 2)`\]). These effects were small, and their credible intervals included zero.
+In the early time window, there were no strong condition effects. The posterior estimate for the typical variation condition relative to atypical variation was β = `r format(round(filter(m.window1_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window1_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window1_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall = 2)`\]). Similarly, the consistent condition estimate was β = `r format(round(filter(m.window1_summary, parameter == "b_conditionstable")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window1_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window1_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall = 2)`\]). These effects were small, and their credible intervals included zero.
 
-In the later window, condition effects were descriptively stronger. The estimate for the natural variation condition relative to atypical variation was β = `r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall = 2)`\]), and for the consistent condition: β = `r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall = 2)`\]). Though credible intervals still overlapped zero, the magnitude and direction of the effects in this window were more consistent with our hypotheses.
+In the later window, condition effects were descriptively stronger. The estimate for the typical variation condition relative to atypical variation was β = `r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall = 2)`\]), and for the consistent condition: β = `r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall = 2)`\]). Though credible intervals still overlapped zero, the magnitude and direction of the effects in this window were more consistent with our hypotheses.
 
 ## Moment-by-moment attention measured by pupil size synchrony
 
@@ -710,7 +706,8 @@ sync_data <- read_csv("data/synchrony/combined/pupil-synchrony-exp23_sentence.cs
   ungroup() %>%
   mutate(sync_z = datawizard::standardize(mean_synchrony))
 
-acc_data <- read_csv("data/test-props.csv") %>%
+acc_data <- read_csv("data/test-props-bywindow.csv") %>%
+  filter(window == "first") %>%
   transmute(pid = pid,
             word = base_word, 
             condition = condition, 
@@ -728,35 +725,40 @@ combined_data <- left_join(acc_data, sync_data,
                             levels = c("unnaturalv", "stable", "naturalv"))) 
 
 sync_model <- lmer(sync_z ~ condition + (1|pid), data = combined_data)
-# confirmed no outliers!
-# outliers <- performance::check_outliers(sync_model)
-anova_result <- anova(sync_model)
-eta <- effectsize::eta_squared(sync_model, partial = TRUE)
 
-# pairwise ccomparions
+# remove outliers and refit
+outliers <- performance::check_outliers(sync_model)
+outlier_ids <- which(outliers)
+combined_data_clean <- combined_data[-outlier_ids, ]
+
+sync_model <- lmer(sync_z ~ condition + (1|pid), data = combined_data_clean)
+
+anova_result <- anova(sync_model)
+
+# pairwise comparions
 emm_sync <- emmeans(sync_model, pairwise ~ condition)
 pairs_sync <- emm_sync$contrasts %>% as.data.frame()
 pairwise_es <- eff_size(emm_sync, sigma = sigma(sync_model), edf = df.residual(sync_model)) %>% as.data.frame()
 
-# no outliers!
-#outliers <- performance::check_outliers(sync_model)
-#outlier_ids <- which(outliers)
-#combined_data_clean <- combined_data[-outlier_ids, ]
-
-model.data <- test.props %>%
+model.data <- test.props.bywindow %>%
+  filter(window == "first") %>%
   mutate(id = str_extract(pid, "[0-9][0-9][0-9]")) %>%
   left_join(ages, by = "id") %>%
-  mutate(condition = relevel(as.factor(condition), ref = "unnaturalv"), 
-         pid = paste0("LVar", id), 
-         word = base_word) %>%
-  left_join(sync_data, by = c("pid", "condition", "word"))
+  mutate(pid = paste0("LVar", id), 
+       word = base_word) %>%
+  left_join(sync_data, by = c("pid", "condition", "word")) %>%
+  mutate(condition = factor(condition,
+                          levels = c("unnaturalv",
+                                     "stable", 
+                                     "naturalv"))) %>%
+  filter(!is.na(sync_z))
 
 if (rerun) {
   m.sync <- brm(
-    bf(prop ~ condition + age_c + sync_z + (1 + condition | id) + (1 + condition + age_c | base_word),
-     phi ~ condition + age_c + sync_z,
-     zoi ~ condition + age_c + sync_z,
-     coi ~ condition + age_c + sync_z),
+    bf(prop ~ age_c + condition * sync_z + (1 + condition | id) + (1 + condition + age_c | base_word),
+     phi ~ condition + age_c,
+     zoi ~ condition + age_c,
+     coi ~ condition + age_c),
   data = model.data,
   family = zero_one_inflated_beta(),
   chains = 4,
@@ -790,7 +792,7 @@ if (rerun) {
 
 We examined synchrony during the two types of critical exposure sentences that differed between conditions (see *Method* for details). A one-way ANOVA revealed a significant main effect of condition on pupil size synchrony \[F(2, `r round(anova_result$DenDF, 0)`) = `r format(round(anova_result$"F value"[1], 2), nsmall = 2)`, *p* = `r format(round(anova_result$"Pr(>F)"[1], 3), nsmall = 3)`\].
 
-Follow-up pairwise comparisons using Tukey's HSD correction indicated that, relative to the atypical variation condition, pupil size synchrony was significantly higher in the typical variation condition (ΔM = `r round(-pairs_sync$estimate[2], 2)`, *p* = `r round(pairs_sync$p.value[2], 3)`, Cohen's *d* = `r round(-pairwise_es$effect.size[2], 2)`) and marginally higher in the consistent condition (ΔM = `r round(-pairs_sync$estimate[1], 2)`, *p* = `r round(pairs_sync$p.value[1], 3)`, Cohen's *d* = `r format(round(-pairwise_es$effect.size[1], 2), nsmall = 2)`). There was no difference in synchrony between the natural variation condition and consistent condition (*p* \> 0.05).
+Follow-up pairwise comparisons using Tukey's HSD correction indicated that, relative to the atypical variation condition, pupil size synchrony was significantly higher in the typical variation condition (ΔM = `r round(-pairs_sync$estimate[2], 2)`, *p* = `r round(pairs_sync$p.value[2], 3)`, Cohen's *d* = `r round(-pairwise_es$effect.size[2], 2)`) and marginally higher in the consistent condition (ΔM = `r round(-pairs_sync$estimate[1], 2)`, *p* = `r round(pairs_sync$p.value[1], 3)`, Cohen's *d* = `r format(round(-pairwise_es$effect.size[1], 2), nsmall = 2)`). There was no difference in synchrony between the typical variation condition and consistent condition (*p* \> 0.05).
 
 ```{r pupillometry-fig}
 emmeans(sync_model, ~ condition) %>%
@@ -845,7 +847,6 @@ combined_data <- left_join(acc_data, sync_data,
                             levels = c("unnaturalv", "stable", "naturalv"))) 
 
 sync_model <- lm(sync_z ~ condition, data = combined_data)
-summary(sync_model)
 
 #outliers <- performance::check_outliers(sync_model)
 #outlier_ids <- which(outliers)
@@ -862,13 +863,25 @@ emm_sync <- emmeans(sync_model, pairwise ~ condition)
 pairs_sync <- emm_sync$contrasts %>% as.data.frame()
 pairwise_es <- eff_size(emm_sync, sigma = sigma(sync_model), edf = df.residual(sync_model)) %>% as.data.frame()
 
+model.data <- test.props.bywindow %>%
+  filter(window == "first") %>%
+  mutate(id = str_extract(pid, "[0-9][0-9][0-9]")) %>%
+  left_join(ages, by = "id") %>%
+  mutate(pid = paste0("LVar", id), 
+       word = base_word) %>%
+  left_join(sync_data, by = c("pid", "condition", "word")) %>%
+  mutate(condition = factor(condition,
+                          levels = c("unnaturalv",
+                                     "stable", 
+                                     "naturalv"))) %>%
+  filter(!is.na(sync_z))
 
 if (rerun) {
   m.sync <- brm(
-    bf(prop ~ condition + age_c + sync_z + (1 + condition | id) + (1 + condition + age_c + sync_z | base_word),
-     phi ~ condition + age_c + sync_z,
-     zoi ~ condition + age_c + sync_z,
-     coi ~ condition + age_c + sync_z),
+    bf(prop ~ condition * sync_z + age_c + (1 + condition | id) + (1 + condition + age_c | base_word),
+     phi ~ condition + age_c,
+     zoi ~ condition + age_c,
+     coi ~ condition + age_c),
   data = model.data,
   family = zero_one_inflated_beta(),
   chains = 4,
@@ -912,33 +925,54 @@ ggplot(combined_data, aes(x = condition, y = sync_z, fill = condition, color = c
   theme_minimal() + 
   theme(legend.position = "none")
 
-ggplot(combined_data, aes(x = sync_z, y = acc_z, color = condition, fill = condition)) +
-  geom_point(shape = 21, alpha = 0.1) + 
-  geom_smooth(method = "lm", se = TRUE) +
+newdata <- combined_data %>%
+distinct(condition) %>%
+  expand_grid(sync_z = seq(min(combined_data$sync_z, na.rm = TRUE),
+                           max(combined_data$sync_z, na.rm = TRUE),
+                           length.out = 100)) %>%
+  mutate(age_c = 0)
+
+epreds <- posterior_epred(m.sync, newdata = newdata, re_formula = NA)
+
+# 3. Convert to long format and merge with newdata
+epred_df <- as_tibble(epreds) %>%
+  pivot_longer(cols = everything(), names_to = "row", values_to = "estimate") %>%
+  mutate(row = as.integer(gsub("V", "", row))) %>%
+  left_join(newdata %>% mutate(row = row_number()), by = "row")
+
+pred_summary <- epred_df %>%
+  group_by(condition, sync_z) %>%
+  summarise(
+    mean = mean(estimate),
+    lower = quantile(estimate, 0.05),
+    upper = quantile(estimate, 0.95),
+    .groups = "drop"
+  )
+
+ggplot(combined_data, aes(x = sync_z, y = mean_accuracy, color = condition, fill = condition)) +
+  geom_point(shape = 21, alpha = 0.1) +
+  geom_line(data = pred_summary, aes(y = mean), size = 1) +
+  geom_ribbon(data = pred_summary, aes(y = mean, ymin = lower, ymax = upper), alpha = 0.2, color = NA) +
   facet_wrap(~ condition) +
-  scale_color_manual(values = condition.colors) + 
-  scale_fill_manual(values = condition.colors) + 
+  scale_color_manual(values = condition.colors) +
+  scale_fill_manual(values = condition.colors) +
   labs(
     x = "Mean Pupil Synchrony",
     y = "Mean Accuracy (Proportion Target Looks)",
-    title = "Relationship Between Pupil Synchrony and Accuracy",
-    subtitle = "Faceted by Condition"
+    title = "Model-Based Relationship Between Pupil Synchrony and Accuracy",
+    subtitle = "Predicted from zero-one inflated beta regression, faceted by condition"
   ) +
-  theme_test() + 
+  theme_test() +
   theme(legend.position = "none")
-
-m_null <- lmer(acc_z ~ condition +  (1 | pid), data = combined_data)
-m_sync <- lmer(acc_z ~ condition + sync_z + (1 | pid), data = combined_data)
-anova(m_null, m_sync)
 ```
 
-We also examined pupil size synchrony at the word level. A one-way ANOVA revealed a significant main effect of condition on pupil size synchrony \[F(2, 314) = `r format(round(anova_result$"F value"[1], 2), nsmall = 2)`, *p* = `r format(round(anova_result$"Pr(>F)"[1], 3), nsmall = 3)`\].
-
-Follow-up pairwise comparisons using Tukey's HSD correction indicated that, relative to the consistent condition, pupil size synchrony was significantly lower in the atypical variation condition condition (ΔM = `r round(pairs_sync$estimate[1], 2)`, *p* = `r round(pairs_sync$p.value[1], 3)`, Cohen's *d* = `r round(pairwise_es$effect.size[1], 2)`) and marginally lower in the typical variation condition (ΔM = `r round(pairs_sync$estimate[3], 2)`, *p* = `r round(pairs_sync$p.value[3], 3)`, Cohen's *d* = `r round(pairwise_es$effect.size[3], 2)`). There was no difference in synchrony between the atypical variation condition and the typical variation condition (*p* \> 0.05).
+We also examined pupil size synchrony at the word level. A one-way ANOVA revealed a significant main effect of condition on pupil size synchrony \[*F*(2, 314) = `r format(round(anova_result$"F value"[1], 2), nsmall = 2)`, *p* = `r format(round(anova_result$"Pr(>F)"[1], 3), nsmall = 3)`\]. Follow-up pairwise comparisons using Tukey's HSD correction indicated that, relative to the consistent condition, pupil size synchrony was significantly lower in the atypical variation condition condition (ΔM = `r round(pairs_sync$estimate[1], 2)`, *p* = `r round(pairs_sync$p.value[1], 3)`, Cohen's *d* = `r format(round(pairwise_es$effect.size[1], 2), nsmall = 2)`) and marginally lower in the typical variation condition (ΔM = `r round(-pairs_sync$estimate[3], 2)`, *p* = `r round(pairs_sync$p.value[3], 3)`, Cohen's *d* = `r round(pairwise_es$effect.size[3], 2)`). There was no difference in synchrony between the atypical variation condition and the typical variation condition (*p* \> 0.05).
 
 ### Relating pupil size synchrony to novel word learning
 
-To understand if toddlers' moment-to-moment engagement with lexically consistent or variable input predicts their novel word learning, we tested whether or not a given participant's proportion looking to a target object during test trials could be reliably predicted from their average pupil size synchrony for that target word during training trials.
+To understand if toddlers' moment-to-moment engagement with lexically consistent or variable input predicts their novel word learning, we tested whether or not a given participant's proportion looking to a target object during test trials could be reliably predicted from their average pupil size synchrony for that target word during training trials. 
+
+Although the interaction between condition and pupil synchrony was not statistically reliable, the direction of the effect in the typical variation condition suggested a possible trend toward increased accuracy with higher synchrony at both the sentence and word level.
 
 # Discussion
 
@@ -950,11 +984,3 @@ To understand if toddlers' moment-to-moment engagement with lexically consistent
 
 ::: {#refs}
 :::
-
-# Funding
-
-This research was supported by a XXX awarded to CLW (XXX) and a National Science Foundation Graduate Research Fellowship awarded to KC.
-
-# Acknowledgements
-
-We are grateful to the participating families as well as the members of the Princeton Baby Lab for their feedback on this work.
