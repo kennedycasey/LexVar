@@ -1,13 +1,13 @@
 library(tidyverse)
 library(readxl)
 
-orders <- read_csv("../data/metadata/orders.csv")
+orders <- read_csv("data/metadata/orders.csv")
 
-path <- "../data/raw/"
+path <- "data/raw/"
 
-log <- read_xlsx("../data/metadata/ANON-ptcp-log.xlsx")
+log <- read_xlsx("data/metadata/ANON-ptcp-log.xlsx")
 
-label.times <- read_csv("../data/metadata/label-times.csv")
+label.times <- read_csv("data/metadata/label-times.csv")
 
 create_frames <- function(start_time, end_time, frame_duration = 1) {
   seq(start_time, end_time, by = frame_duration)
@@ -40,7 +40,7 @@ for (i in included.files) {
   
   if (status != "n") {
     
-    exists <- file.exists(paste0("../data/processed/", id, "-test.csv"))
+    exists <- file.exists(paste0("data/processed/", id, "-test.csv"))
     
     if (reprocess | !exists) {
     
@@ -56,8 +56,8 @@ for (i in included.files) {
                 trial_start = TRIAL_START_TIME,
                 center = center,
                 aoi = case_when(
-                  CURRENT_FIX_X < 710 & CURRENT_FIX_X >= 30 ~ "left",
-                  CURRENT_FIX_X > 730 & CURRENT_FIX_X <= 1410 ~ "right",
+                  CURRENT_FIX_X <= 680 & CURRENT_FIX_X >= 100 ~ "left",
+                  CURRENT_FIX_X >= 760 & CURRENT_FIX_X <= 1340 ~ "right",
                   TRUE ~ NA), 
                 x = CURRENT_FIX_X,
                 fix_start = CURRENT_FIX_START,
@@ -102,22 +102,24 @@ for (i in included.files) {
              aoi = toupper(substr(aoi, 1, 1)), 
              fix = ifelse(aoi == target_side, "target", "distracter")) %>%
       ungroup() %>%
-      mutate(window = case_when(
-        fix_start >= window_start_delay & fix_end <= window_max_length ~ "first", 
-        fix_start >= second_label - first_label + window_start_delay & 
-          fix_start <= second_label-first_label + window_max_length ~ "second", 
-        TRUE ~ NA
-      ), 
-      postnaming = ifelse(fix_start >= window_start_delay & 
-                            fix_start <= second_label-first_label + window_max_length, 
-                          "y", "n"))
+      mutate(
+        first_start = window_start_delay,
+        first_end = window_max_length,
+        second_start = round(second_label - first_label, 0) + window_start_delay,
+        second_end = round(second_label - first_label, 0) + window_max_length,
+        window = case_when(
+          frame >= first_start & frame <= first_end ~ "first",
+          frame >= second_start & frame <= second_end ~ "second",
+          TRUE ~ NA_character_
+        ),
+      postnaming = ifelse(frame >= window_start_delay & frame <= second_label-first_label + window_max_length, "y", "n"))
     
     trial.conditions <- test %>%
       select(trial, condition) %>%
       distinct()
     
     prenaming_window_fix <- test %>%
-      filter(fix_start <= 0) %>%
+      filter(frame <= 0) %>%
       pull(trial) %>%
       unique()
     
@@ -136,7 +138,7 @@ for (i in included.files) {
       pull(trial)
 
     usable.trials.nos <- c(intersect(prenaming_window_fix, first_window_fix),
-                          second_window_fix) %>%
+                           second_window_fix) %>%
       unique()
     
     usable.trials <- tibble(trial = usable.trials.nos) %>%
@@ -161,60 +163,62 @@ for (i in included.files) {
         mutate(frame = list(create_frames(fix_start, fix_end))) %>%
         unnest(cols = frame) %>%
         ungroup()
+
+      write_csv(usable.trials, paste0("data/processed/usable/", id, ".csv"))
       
-      write_csv(usable.trials, paste0("../data/processed/usable/", id, ".csv"))
+      write_csv(test, paste0("data/processed/", id, "-test.csv"))
+      write_csv(train, paste0("data/processed/", id, "-train.csv"))
       
-      write_csv(test, paste0("../data/processed/", id, "-test.csv"))
-      write_csv(train, paste0("../data/processed/", id, "-train.csv"))
-      
-      cluster <- test %>%
-        arrange(frame) %>%
-        group_by(pid, id, order, age_m, trial_index, trial_label, trial_start, 
-                 center, trial, target_side, base_word, condition, first_label, 
-                 second_label, window, postnaming) %>%
-        group_modify(~ {
-          full_frame_range <- data.frame(frame = -3152:7471)
-          full_data <- full_frame_range %>%
-            left_join(.x, by = "frame")
-          
-          full_data_filled <- full_data %>%
-            tidyr::fill(names(.), .direction = "down") %>%
-            distinct()
-          
-          full_data_filled <- full_data_filled %>%
-            mutate(
-              aoi = ifelse(is.na(aoi), NA, aoi),
-              trackloss = ifelse(is.na(aoi), TRUE, FALSE)
-            )
-          return(full_data_filled)
-        }) %>%
-        ungroup()
-      
-      write.csv(cluster, paste0("../data/processed/", id, "-cluster.csv"), row.names = FALSE)
+      # cluster <- test %>%
+      #   arrange(frame) %>%
+      #   group_by(pid, id, order, age_m, trial_index, trial_label, trial_start, 
+      #            center, trial, target_side, base_word, condition, first_label, 
+      #            second_label, window, postnaming) %>%
+      #   group_modify(~ {
+      #     full_frame_range <- data.frame(frame = -3152:7471)
+      #     full_data <- full_frame_range %>%
+      #       left_join(.x, by = "frame")
+      #     
+      #     full_data_filled <- full_data %>%
+      #       tidyr::fill(names(.), .direction = "down") %>%
+      #       distinct()
+      #     
+      #     full_data_filled <- full_data_filled %>%
+      #       mutate(
+      #         aoi = ifelse(is.na(aoi), NA, aoi),
+      #         trackloss = ifelse(is.na(aoi), TRUE, FALSE)
+      #       )
+      #     return(full_data_filled)
+      #   }) %>%
+      #   ungroup()
+      # 
+      # write.csv(cluster, paste0("data/processed/", id, "-cluster.csv"), row.names = FALSE)
     }
     }
   }
 }
 
 counts <- c()
-for (i in list.files("../data/processed/usable/", ".csv")) {
-  curr <- read_csv(paste0("../data/processed/usable/", i)) %>%
+for (i in list.files("data/processed/usable/", ".csv")) {
+  curr <- read_csv(paste0("data/processed/usable/", i)) %>%
     nrow()
 
   counts <- c(counts, curr)
 }
 
-
 # pupillometry ------------------------------------------------------------
+library(stinepack)
+library(zoo)
 
-processed.path <- "../data/processed/"
-for (i in list.files(processed.path, "test.csv")) {
+processed.path <- "data/processed/"
+for (i in list.files(processed.path, "train.csv")) {
   curr.id <- str_extract(i, "[0-9][0-9][0-9]")
-  
+
+  # create dirs for participant data
   if (!dir.exists(paste0(processed.path, "pupillometry/LexVar", curr.id))) {
     dir.create(paste0(processed.path, "pupillometry/LexVar", curr.id))
   }
-  
+
   curr.file <- read_csv(paste0(processed.path, i)) %>%
     group_by(base_word, trial_index) %>%
     mutate(order = cur_group_id()) %>%
@@ -222,19 +226,53 @@ for (i in list.files(processed.path, "test.csv")) {
     group_by(base_word) %>%
     mutate(word.order = ifelse(order == min(order), 1, 2)) %>%
     ungroup()
-  
+
   for (j in unique(curr.file$order)) {
     curr.trial <- curr.file %>%
-      filter(order == j) 
+      filter(order == j)
+    
+    # convert raw pupil size to % change
+    curr.trial <- curr.trial %>%
+        mutate(pupil_norm = 100 * (pupil - mean(pupil, na.rm = TRUE)) / mean(pupil, na.rm = TRUE))
+
+    # set window size for artifact detection
+    window_size <- 50
+    
+    pupil_range <- rollapply(curr.trial$pupil_norm, width = window_size, FUN = function(x) max(x) - min(x),
+                             fill = NA, align = "center")
+    
+    # drop blink artifacts (>15% change in 0.05-s window)
+    artifact_mask <- pupil_range > 15
+    
+    curr.trial <- curr.trial %>%
+      mutate(pupil_norm = pupil_norm,
+             artifact = artifact_mask) %>%
+      filter(!artifact)
     
     curr.word <- unique(curr.trial$base_word)
     curr.word.order <- unique(curr.trial$word.order)
     curr.condition <- unique(curr.trial$condition)
     
+    # interpolate gaps <100ms (stineman)
+    curr.trial <- curr.trial %>%
+      mutate(
+        pupil_norm_interp = {
+          if (sum(!is.na(pupil_norm)) < 2) {
+            rep(NA_real_, length(pupil_norm))
+          } else {
+            stinterp(
+              x = which(!is.na(pupil_norm)),
+              y = pupil_norm[!is.na(pupil_norm)],
+              xout = seq_along(pupil_norm)
+            )$y
+          }
+        }
+      )
+
     curr.trial %>%
-      transmute(frame = row_number(), 
-                pupil = pupil) %>%
-      write_csv(paste0("../data/processed/pupillometry/LexVar", curr.id, "/", 
+      transmute(frame = row_number(),
+                pupil_norm = pupil_norm) %>%
+      write_csv(paste0("data/processed/pupillometry/LexVar", curr.id, "/",
                        curr.condition, "_", curr.word, "_", curr.word.order, ".csv"))
   }
 }

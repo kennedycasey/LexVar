@@ -10,28 +10,18 @@
 -- becomes:
 -- Schneider's (2021) primary findings were replicated in our study.
 
+-- This filter also removes the asterisk for in-text citations that are also no-cite meta-analytic references.
+
 local andreplacement = "and"
 local makelinks = false
 local no_ampersand_parenthetical = false
 
--- make string, if it exists, else return default
-local stringify = function(s, default)
-  if s then
-    s = pandoc.utils.stringify(s)
-  else
-    if default then
-      s = default
-    else
-      s = ""
-    end
-  end
-  return s
-end
+local utilsapa = require("utilsapa")
 
 -- Get alternate separator, if it exists
 local function get_and(m)
   if m.language and m.language["citation-last-author-separator"] then
-    andreplacement = stringify(
+    andreplacement = utilsapa.stringify(
       m.language["citation-last-author-separator"], 
       andreplacement)
   end
@@ -44,7 +34,23 @@ local function get_and(m)
   end
 end
 
+local function remove_asterisk(s)
+  s.text = string.gsub(s.text, "^%*", "")
+  return s
+end
+
 local function replace_and(ct)
+    -- Remove initial asterisk 
+    
+    ct.content = ct.content:walk {
+        Str = remove_asterisk,
+            Link = function(l)
+              l.content = l.content:walk {
+                Str = remove_asterisk
+              }
+              return(l)
+            end
+    }
     
     if ct.citations[1].mode == "AuthorInText" or no_ampersand_parenthetical then
       -- Replace ampersand
@@ -87,6 +93,8 @@ local function replace_and(ct)
     end
     if FORMAT == "typst" then
       return ct.content
+    else
+      return ct
     end
 end
 

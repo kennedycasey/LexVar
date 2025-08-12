@@ -15,6 +15,7 @@ h1, h2, h3, h4, h5 {border: none; margin: 0; padding: 0;line-height: 2; text-ind
 
 h1 {text-align: center;}
 h3 {font-style: italic}
+h4 {font-weight: bold}
 
 h4, h5 {
 text-indent: 0.5in;
@@ -68,9 +69,14 @@ div.hanging-indent .csl-entry {margin-left: 0; text-indent: -0.5in;}
 
 blockquote p:nth-child(1) {text-indent: 0}
 
+table {
+    font-variant-numeric: tabular-nums;
+}
+
 .table {
   border-top: 1px solid black;
   border-bottom: 1px solid black;
+  font-variant-numeric: tabular-nums;
 }
 
 .table>thead {
