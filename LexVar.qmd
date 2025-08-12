@@ -102,31 +102,21 @@ theme_custom <- function(base_size = 15) {
 
 # Introduction
 
-Across many languages, speech addressed to infants and young children frequently includes "baby-talk" words that are unique or highly specific to this infant- or child-directed register [@bynon1968berber; @casagrande1948comanche; @ferguson1964baby; @han2023che; @mazuka2008japanese; @ota2018choo; @pye1986quiche; @sarvasy2025child]. These infant- or child-directed words are often variants of existing word forms in adult language but with some phonological and/or morphological change(s) [@moore2024wordform] or iconic relationships [CITE]. Some child-directed versus adult-directed variants share little to no overlap [e.g., *bunny* and *rabbit*, @soderstrom2007beyond].
-
-While child-directed variants are eventually replaced by adult word forms in children's and caregivers' speech [@casey2022doggy], multiple lexical variants have been shown to be used seemingly interchangeably in children's early language environments [@caseyIPcorpus; @moore2024wordform]. How does exposure to this kind of label variation impact children's word learning?
-
-## Evidence that label variation complicates early word learning
+Across many languages, speech addressed to infants and young children frequently includes "baby-talk" words that are unique or highly specific to this child-directed register [@bynon1968berber; @casagrande1948comanche; @ferguson1964baby; @han2023che; @mazuka2008japanese; @ota2018choo; @pye1986quiche; @sarvasy2025child]. Child-directed words are often variants of existing word forms in adult language but with some phonological and/or morphological change(s) [@moore2024wordform] or iconic relationships [CITE]. Some child-directed versus adult-directed variants share little to no overlap [e.g., *bunny* and *rabbit*, @soderstrom2007beyond]. While child-directed variants are eventually replaced by adult word forms in children's and caregivers' speech [@casey2022doggy], multiple lexical variants have been shown to be used seemingly interchangeably in children's early language environments [@caseyIPcorpus; @moore2024wordform]. How does exposure to this kind of label variation impact children's word learning?
 
 The process of early word learning is traditionally framed as a one-to-one mapping problem---children learn to associate individual word forms (i.e., labels) with individual referents [@smith2008infant; but see also @wojcik2022map]. <!---
 from this perspective, label variation could introduce noise into the input, making it harder to form stable label–referent associations. Indeed, variation in labeling has been linked to slower learning or increased confusion in some experimental paradigms [CITES]. Under this account, we might expect that exposure to multiple variants for the same referent could reduce children’s recognition accuracy compared to consistent labeling.-->
 
-## Evidence that label variation may support early word learning
-Conversely, some features of child-directed variants have been linked with early learnability. Reduplicated word forms, which include repetition of full or partial syllables (e.g., *woof-woof*, *bow-wow*), are relatively common in child-directed speech [though estimated rates vary substantially across languages, e.g., @han2023chan; @mazuka2008japanese; @ota2018choo]. Ota and Skarabela [-@ota2016reduplicated] found that (Scottish) English-learning 17- to 19-month-olds learned reduplicated labels for novel objects better than non-reduplicated labels and cite three possible explanations of this pattern. Reduplicated labels may be more learnable because (1) repeated syllables are more salient in continuous speech and thus more segmentable [@ota2018reduplication], (2) syllable redundancy may facilitate more efficient phonological encoding [consistent with @damian2009exploring's work with English-speaking adults], and (3) adjacent repetition may lead to stronger lexical activation, supporting faster online word recognition.
+Conversely, some features of child-directed variants have been linked with early learnability. Reduplicated word forms, which include repetition of full or partial syllables (e.g., *woof-woof*, *bow-wow*), are relatively common in child-directed speech [CDS, though estimated rates vary substantially across languages, e.g., @han2023chan; @mazuka2008japanese; @ota2018choo]. Ota and Skarabela [-@ota2016reduplicated] found that (Scottish) English-learning 17- to 19-month-olds learned reduplicated labels for novel objects better than non-reduplicated labels and cite three possible explanations of this pattern. Reduplicated labels may be more learnable because (1) repeated syllables are more salient in continuous speech and thus more segmentable [@ota2018reduplication], (2) syllable redundancy may facilitate more efficient phonological encoding [consistent with @damian2009exploring's work with English-speaking adults], and (3) adjacent repetition may lead to stronger lexical activation, supporting faster online word recognition.
 
 Multiple lexical variants have been shown to be used seemingly interchangeably in English child-directed speech [@caseyIPcorpus; @casey2022doggy; @moore2024wordform]. Earlier-learned words tend to be associated with more variation [@caseyIPcorpus; @moore2024wordform], suggesting that learners must contend with a relatively complicated linguistic landscape from early in development. How do multiple labels impact children's word learning?
 
 However, existing research leaves open the question of how label variation impacts children's early word learning.
 
-In the current study, we
+Despite these competing possibilities, no studies to date have directly tested how consistent versus variable labels impact toddlers' ability to learn new words. The present study addresses this gap by manipulating the presence and type of label variation in a controlled, lab-based novel word learning task. In an eye-tracking study using a looking-while-listening (LWL) design [@fernald2008looking; @swingley2000spoken], English-hearing toddlers learned novel word-object mappings across three within-subjects conditions. In the *consistent* condition, toddlers heard repeated exposures to the exact same standard label. In two variation conditions, toddlers heard repetitions of the standard label in addition to two label variants. The *typical variation* condition featured label variants common in English CDS, including diminutivized and reduplicated word forms. The *atypical variation* condition featured phonologically altered word forms unattested in English CDS. Word recognition was measured using eye-tracking (i.e., looking time), and pupillometry (i.e., pupil size synchrony) was used to examine moment-to-moment engagement during learning.
 
-In line with the vast majority of prior word learning studies conducted to date, which overwhelmingly test children's recognition of one-to-one mappings, we hypothesized that children would demonstrate successful learning in the *consistent* condition after receiving multiple repeated exposures to the target label [CITES].
-
-The key condition of interest is the *typical variation* condition, where children hear label variants common in English child-directed speech, including diminutivized and reduplicated word forms. We did not pre-register a specific directional hypothesis for this condition given competing theoretical predictions from existing evidence. If children successfully contend with variation attested in English child-directed speech, then we should expect to see above-chance word-recognition accuracy in this condition. If this type of variation impedes novel word learning, then we should expect chance-level performance in this condition.
-
-We hypothesized that words would be more difficult to learn in the *atypical variation* condition and that toddlers would show chance-level word-recognition accuracy on average for this condition.
-
-Finally, we predicted that performance would increase across age in our sample.
+## Hypotheses
+In line with the vast majority of prior word learning studies conducted to date, which overwhelmingly test children's recognition of one-to-one mappings, we hypothesized that children would demonstrate successful learning in the *consistent* condition [CITES]. The key condition of interest was the *typical variation* condition. We did not pre-register a specific directional hypothesis for this condition given competing theoretical predictions. If children successfully contend with variation attested in English child-directed speech, then we should expect to see above-chance word-recognition accuracy in this condition. If this type of variation impedes novel word learning, then we should expect chance-level performance in this condition. We hypothesized that words would be more difficult to learn in the *atypical variation* condition and that toddlers would show chance-level word-recognition accuracy on average for this condition. Finally, we predicted that word learning performance would increase across age in our sample.
 
 # Method
 
@@ -862,7 +852,7 @@ summary_table <- params %>%
 #| tbl-cap: "Table 2. Posterior means and 89% credible intervals for each effect across models."
 apa_table(
   summary_table,
-  note = "The overall model includes both post-labeling windows (averaged accuracy) and the window-specific models include proportion estimates for 300--2,000 ms following each target word onset. The mu component models the predicted accuracy (i.e., proportion looking to the target object) for non-boundary values (not 0s or 1s). The zoi (zero-one inflation) component models the likelihood of boundary values, and the coi (conditional one inflation) component models the probability of exact 1s among boundary values."
+  note = "The overall model includes both post-labeling windows (averaged accuracy) and the window-specific models include proportion estimates for 300--2,000 ms following each target word onset. The μ component models the predicted accuracy (i.e., proportion looking to the target object) for non-boundary values (values between but not including 0 or 1). The zoi (zero-one inflation) component models the likelihood of accuarcy being a boundary value---floor (0) or ceiling (1). The coi (conditional-one inflation) component models the probability of ceiling responses (1s) among boundary values."
 )
 ```
 
@@ -1036,28 +1026,6 @@ To understand if toddlers' moment-to-moment engagement with lexically consistent
 We added mean pupil size synchrony (z-scored) as an additional fixed effect, along with a condition by synchrony interaction term, to our main zero-one inflated beta regression model. Model comparison using leave-one-out cross-validation [@loo] revealed a small improvement in predictive accuracy for the model including pupil size synchrony compared to a model with age and condition only (ΔELPD = `r round(comp$elpd_diff[2], 2)`, *SE* = `r round(comp$se_diff[2], 2)`), but the two models were nearly equivalent in overall fit.
 
 Results revealed no overall main effect of pupil size synchrony on participants' word-recognition accuracy (*b* = `r round(filter(m.sync_summary, parameter == "b_sync_z")$value, 2)`, 89% CrI \[`r round(filter(m.sync_summary, parameter == "b_sync_z")$value.lower, 2)`, `r round(filter(m.sync_summary, parameter == "b_sync_z")$value.upper, 2)`\]). The interaction between condition and synchrony was not statistically reliable (i.e., all 89% credible intervals included zero), but the direction of the effect in the typical variation condition suggested a possible trend toward increased word-recognition accuracy for participants with higher synchrony during critical exposure sentences (*b* = `r round(filter(m.sync_summary, parameter == "b_conditionnaturalv:sync_z")$value, 2)`, 89% CrI \[`r round(filter(m.sync_summary, parameter == "b_conditionnaturalv:sync_z")$value.lower, 2)`, `r round(filter(m.sync_summary, parameter == "b_conditionnaturalv:sync_z")$value.upper, 2)`\]).
-
-```{r fig:pupil-condition-interaction, fig.cap = "Raw accuracy (z-scored) predicted by mean pupil size synchrony (z-scored) across conditions. Jittered points represent participant means.", fig.width = 6, fig.height = 4}
-facet_labels <- c(
-  "naturalv" = "Typical Variation",
-  "unnaturalv" = "Atypical Variation",
-  "stable" = "Consistent"
-)
-
-fig3 <- ggplot(combined_data_clean, aes(x = sync_z, y = acc_z, color = condition, fill = condition)) +
-  geom_point(shape = 21, alpha = 0.1) + 
-  geom_smooth(method = "lm", se = TRUE) +
-  facet_wrap(~ condition, labeller = as_labeller(facet_labels)) +
-  scale_color_manual(values = condition.colors) + 
-  scale_fill_manual(values = condition.colors) + 
-  labs(
-    x = "Mean pupil size synchrony (z-scored)",
-    y = "Mean accuracy (z-scored)"
-  ) +
-  theme_custom()
-ggsave("Figure3.png", fig3, width = 6, height = 4, dpi = 300)
-knitr::include_graphics("Figure3.png")
-```
 
 # Discussion
 
