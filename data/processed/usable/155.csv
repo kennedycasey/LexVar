@@ -1,9 +1,10 @@
 id,condition,trial
 155,stable,1
-155,stable,2
-155,stable,3
 155,naturalv,5
 155,naturalv,6
-155,naturalv,7
 155,unnaturalv,9
 155,unnaturalv,10
+155,stable,2
+155,stable,3
+155,stable,4
+155,unnaturalv,11

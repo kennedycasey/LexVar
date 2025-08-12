@@ -1,9 +1,13 @@
 id,condition,trial
 163,unnaturalv,1
-163,unnaturalv,3
+163,unnaturalv,2
 163,unnaturalv,4
-163,stable,5
+163,stable,6
 163,stable,7
+163,stable,8
 163,naturalv,9
 163,naturalv,10
 163,naturalv,11
+163,unnaturalv,3
+163,stable,5
+163,naturalv,12

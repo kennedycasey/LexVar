@@ -5,6 +5,8 @@ id,condition,trial
 119,naturalv,7
 119,naturalv,8
 119,unnaturalv,9
-119,unnaturalv,10
 119,unnaturalv,11
 119,unnaturalv,12
+119,stable,2
+119,stable,3
+119,unnaturalv,10

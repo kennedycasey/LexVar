@@ -1,9 +1,12 @@
 id,condition,trial
 107,naturalv,1
+107,naturalv,2
 107,naturalv,3
 107,naturalv,4
 107,unnaturalv,5
+107,unnaturalv,6
 107,unnaturalv,7
 107,stable,9
 107,stable,10
 107,stable,11
+107,stable,12
