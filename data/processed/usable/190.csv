@@ -1,8 +1,10 @@
 id,condition,trial
 190,naturalv,1
 190,naturalv,2
+190,naturalv,3
 190,naturalv,4
 190,unnaturalv,5
+190,unnaturalv,6
 190,unnaturalv,7
 190,stable,9
 190,stable,12

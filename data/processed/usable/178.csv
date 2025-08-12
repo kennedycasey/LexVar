@@ -1,4 +1,5 @@
 id,condition,trial
+178,unnaturalv,1
 178,unnaturalv,2
 178,unnaturalv,3
 178,unnaturalv,4
@@ -6,5 +7,7 @@ id,condition,trial
 178,stable,6
 178,stable,7
 178,stable,8
+178,naturalv,9
+178,naturalv,10
 178,naturalv,11
 178,naturalv,12

@@ -3,6 +3,9 @@ id,condition,trial
 171,naturalv,4
 171,unnaturalv,5
 171,unnaturalv,6
-171,unnaturalv,7
 171,stable,9
 171,stable,10
+171,stable,12
+171,unnaturalv,7
+171,unnaturalv,8
+171,stable,11
