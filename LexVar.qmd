@@ -6,31 +6,24 @@ author:
     corresponding: true
     orcid: 0000-0001-5326-3080
     email: kcasey@princeton.edu
-    affiliations:
+    affiliation:
       - name: Princeton University
         department: Department of Psychology
-        address: 40 Woodlands Way
-        city: Princeton
-        region: NJ
-        country: USA
-        postal-code: "08544"
+        address: "40 Woodlands Way, Princeton, NJ 08544"
   - name: Casey Lew-Williams
     orcid: 0000-0002-8781-4458
     email: caseylw@princeton.edu
-    affiliations:
+    affiliation:
       - name: Princeton University
         department: Department of Psychology
-        address: 40 Woodlands Way
-        city: Princeton
-        region: NJ
-        country: USA
-        postal-code: "08544"
+        address: "40 Woodlands Way, Princeton, NJ 08544"
+    
 author-note:
   disclosures:
     study-registration: "The study design and analysis plan was pre-registered ([https://osf.io/uqz6d](https://osf.io/uqz6d))."
-    data-sharing: "Anonymized data are available at LINK."
+    data-sharing: "Anonymized data and fully reproducible manuscript code are available at LINK."
     conflict-of-interest: "The authors declare no conflicts of interest."
-    financial-support: "This research was supported by a XXX awarded to CLW (XXX) and a National Science Foundation Graduate Research Fellowship awarded to KC."
+    financial-support: "This research was supported by the Eunice Kennedy Shriver National Institute of Child Health and Human Development (R01R01HD095912-05 awarded to CLW) and the National Science Foundation (Graduate Research Fellowship awarded to KC)."
     gratitude: "We are grateful to the participating families as well as the members of the Princeton Baby Lab and Psychology of Language Lab for their feedback on this work."
     authorship-agreements: ~
 abstract: "Early word learning is traditionally characterized as a process of mapping a single label onto a single referent. Yet, across many languages, child-directed speech (CDS) frequently features multiple labels for the same referent, including diminutivized and reduplicated word forms (e.g., *doggy* or *woof-woof* for *dog*). We examined how consistent versus variable labels impact children's novel word learning. In a within-subjects eye-tracking experiment, we exposed 18- to 36-month-old English-hearing children to novel objects that were labeled either consistently, with typical CDS variants, or with unattested CDS variants that are atypical in English. Using looking-time measures of word-recognition accuracy, we found that, overall, children successfully learned words in all conditions, but accuracy was highest in the typical variation and consistent conditions. Using pupil size synchrony measures of moment-by-moment attention, we found that engagement was higher in both variation conditions compared to the consistent condition, and was highest in the typical variation condition. Our findings suggest (1) that children can successfully contend with multiple types of label variation when learning new words, and (2) that increased attention is a plausible mechanism by which label variation could support---rather than hinder---children's early word learning."
@@ -70,19 +63,19 @@ library(ggsignif)
 library(papaja)
 
 # reprocess raw eye-tracking data? set to TRUE or FALSE
-reprocess=FALSE
+reprocess = FALSE
 if (reprocess) {
   source("analysis/process.R")
 }
 
 # reprocess pupillometry data? set to TRUE or FALSE
-reprocess.pupil=FALSE 
+reprocess.pupil = FALSE 
 if (reprocess.pupil) {
   source("analysis/pupillometry.R")
 }
 
 # re-run brms models? set to TRUE or FALSE
-rerun=FALSE
+rerun = FALSE
 
 # set condition colors
 condition.colors <- c("stable"="#ef5039", 
@@ -107,9 +100,9 @@ Across many languages, child-directed speech (CDS) frequently includes "baby-tal
 From a traditional one-to-one mapping perspective---children learn to associate individual word forms (i.e., labels) with individual referents [e.g., @smith2008infants; @stevens2017pursuit; but see also @wojcik2022map] ---label variation could be considered "noise" in the learning signal. Indeed, children often avoid adopting a second label for a referent they already have a name for [i.e., the mutual exclusivity bias: @markman1988children; @markman2003use; @merriman1989mutual; but see also @mervis1994two; @swingley2016two]. Using multiple variants to label the exact same referent also violates the pragmatic assumption that unique word forms must have unique meanings [i.e., the principle of contrast: @clark1988logic]. Introducing multiple interchangeable labels also effectively decreases the frequency of the standard label [one of the best predictors of earlier word learning, @braginsky2019consistency] and makes utterances less predictable [and thus potentially harder to learn new words from, e.g., @reuter2019predict]. Variants may also create lexical competition [@swingley2007lexical] as well as increase memory interference [@regier2005emergence] or general memory demands [see @vlach2019learning for further discussion of memory constraints].
 
 ## Label variation may support word learning
-Yet, (American) English-hearing children both recognize [@potter2024frequent] and use [@casey2022doggy; @deak2001any] multiple labels for the same referent. In fact, children's earliest learned words are associated with the greatest amount of label variation in their input [@moore2024wordform]. Moreover, the presence of certain types of label variation in the input has been shown to correlate both with children's concurrent vocabulary size [@callanan2004multiple] and future vocabulary growth [@ota2018choo] as well as their earlier learning of individual words [@moore2024wordform]. Thus, young learners appear to successfully contend with---and potentially benefit from---label variation in their input.
+Yet, (US) English-hearing children both recognize [@potter2024frequent] and use [@casey2022doggy; @deak2001any] multiple labels for the same referent. In fact, children's earliest learned words are associated with the greatest amount of label variation in their input [@moore2024wordform]. Moreover, the presence of certain types of label variation in the input has been shown to correlate both with children's concurrent vocabulary size [@callanan2004multiple] and future vocabulary growth [@ota2018choo] as well as their earlier learning of individual words [@moore2024wordform]. Thus, young learners appear to successfully contend with---and potentially benefit from---label variation in their input.
 
-One partial explanation for this pattern is that child-directed variants are more learnable than standard adult word forms. Reduplicated variants, which include repetition of full or partial syllables (e.g., *woof-woof*, *bow-wow*), are relatively common in CDS [though estimated rates vary substantially across languages, e.g., @han2023che; @mazuka2008japanese; @ota2018choo]. Ota and Skarabela [-@ota2016reduplicated] found that (Scottish) English-learning 17- to 19-month-olds learned reduplicated labels for novel objects better than non-reduplicated labels. Diminutivized variants, which include /i/ epenthesis in English (e.g., *doggy*), are also common in CDS [though again with cross-linguistic variation in rates, e.g., @kempe2001can; @ota2018choo; @savickiene1998acquisition]. Moore and Bergelson [-@moore2024wordform] found that diminutives were the most common type of label variation observed in a corpus of 6- to 17-month-old (American) English-learning infants. Critically, hearing a higher proportion of both reduplicated words and diminutivized words has been linked to faster vocabulary growth from 9 to 21 months for (Scottish) English learners [@ota2018choo]. Additionally, both of these types of label variants have been shown to facilitate word segmentation [@ota2018reduplication; @kempe2007diminutives], and in doing so, could support word learning [e.g., @yurovsky2012statistical].
+One partial explanation for this pattern is that child-directed variants are more learnable than standard adult word forms. Reduplicated variants, which include repetition of full or partial syllables (e.g., *woof-woof*, *bow-wow*), are relatively common in CDS [though estimated rates vary substantially across languages, e.g., @han2023che; @mazuka2008japanese; @ota2018choo]. Ota and Skarabela [-@ota2016reduplicated] found that (Scottish) English-learning 17- to 19-month-olds learned reduplicated labels for novel objects better than non-reduplicated labels. Diminutivized variants, which include /i/ epenthesis in English (e.g., *doggy*), are also common in CDS [though again with cross-linguistic variation in rates, e.g., @kempe2001can; @ota2018choo; @savickiene1998acquisition]. Moore and Bergelson [-@moore2024wordform] found that diminutives were the most common type of label variation observed in a corpus of 6- to 17-month-old (US) English-learning infants. Critically, hearing a higher proportion of both reduplicated words and diminutivized words has been linked to faster vocabulary growth from 9 to 21 months for (Scottish) English learners [@ota2018choo]. Additionally, both of these types of label variants have been shown to facilitate word segmentation [@ota2018reduplication; @kempe2007diminutives], and in doing so, could support word learning [e.g., @yurovsky2012statistical].
 
 What prior findings do not address is how the interchangeable use of multiple variants in the same interaction could facilitate---rather than hinder---children's word learning. We consider attention as a plausible mechanism: label variation may heighten engagement across repeated labeling instances, particularly over short timescales. Just as CDS as a register is generally preferred by young listeners over adult-directed speech [ADS, @manybabies2020quantifying], hearing multiple CDS variants may help capture and sustain children's attention. Indeed, word repetition does not tend to draw children's attention [@segal2015infant; @schwab2016repetition], but label variation may introduce the kind of novelty that promotes engagement [see @tippenhauerURvariety for a relevant review], while still offering sufficient predictability to be learnable [@kidd2012goldilocks; @kidd2014goldilocks]. This account aligns with evidence that other types of variability within CDS, such as prosodic contours [@nencheva2021moment; @rasanen2018infant] and vowel articulations [@miyazawa2017vowels], engage children's attention and scaffold their word learning.
 
@@ -308,7 +301,7 @@ Following @nencheva2021moment, we first converted toddlers' raw pupil size value
 # Results (881 words)
 ## Word recognition measured by gaze behavior
 ```{r test-prep}
-rewrite=FALSE
+rewrite = FALSE
 path <- "data/processed/"
 
 if (rewrite) {
@@ -327,7 +320,7 @@ if (rewrite) {
     
     status <- filter(log, str_detect(ptcp_id, id))$usable_checked
     
-    if (status != "n" & !is.na(statAmerican)) {
+    if (status != "n" & !is.na(status)) {
       # read in usable trials from pre-processing stage
       usable.trials <- read_csv(paste0("data/processed/usable/", id, ".csv")) %>%
         pull(trial)
@@ -1040,7 +1033,7 @@ We tested how consistent versus variable labels impact English-hearing toddlers'
 
 As expected, children performed above chance in the consistent condition, replicating decades of findings that children can learn novel one-to-one mappings from a brief exposure phase. The primary goal of this study was to determine how children contend with two different types of label variation. In the atypical variation condition, word-recognition accuracy was weakest, with chance-level performance in the first critical window as hypothesized, and above-chance performance following the second label. In the typical variation condition, word-recognition accuracy was numerically highest. Although our models indicated some uncertainty around the magnitude of this advantage, this pattern suggests that toddlers were not only able to contend with but may have benefited from hearing familiar types of label variation.
 
-By the second instance of hearing the target label [cf. @ota2016reduplicated], children reliably recognized the novel word-object mappings in all conditions, suggesting that toddlers succeeded in learning words from both consistent and variable labels. It is important to acknowledge, however, that our current findings cannot fully tease apart different explanations for why children successfully learned from all types of input. One possibility is that exposure to four repetitions of the standard word form was sufficient, regardless of the surrounding variants. Children may have "filtered out" [cf. @potter2019infants] atypical or unfamiliar forms, focusing on the consistent standard repetitions. This explanation is plausible in the context of this short in-lab experiment but contrasts with naturalistic evidence that CDS variants are common in children's early productive vocabularies [e.g., @frank2021variability; @laing2019role; @tardif2008baby] and are used more often than standard adult word forms in the first years of life [@casey2022doggy]. Because it was not feasible for us to also evaluate children's recognition of typical and atypical variants in the test phase given the length of the task, we cannot determine what children encoded about the label variants and how this information affected their word-recognition accuracy. Future work might further examine causal effects of exposure to label variants, such as improved long-term retention of word-object mappings [cf. @vlach2019learning] or better generalization to new label variants [cf. @regier2005emergence; @swingley2016two].
+By the second instance of hearing the target label [cf. @ota2016reduplicated], children reliably recognized the novel word-object mappings in all conditions, suggesting that toddlers succeeded in learning words from both consistent and variable labels. It is important to acknowledge, however, that our current findings cannot fully tease apart different explanations for why children successfully learned from both types of input. It is possible that exposure to four repetitions of the standard word form was sufficient for children to learn label-object mappings, regardless of the surrounding variants. Children may have "filtered out" [cf. @potter2019infants] atypical or unfamiliar forms, focusing on the consistent standard repetitions. This explanation is plausible in the context of this short in-lab experiment but contrasts with naturalistic evidence that CDS variants are common in children's early productive vocabularies [e.g., @frank2021variability; @laing2019role; @tardif2008baby] and are used more often than standard adult word forms in the first years of life [@casey2022doggy]. Because it was not feasible to also evaluate children's recognition of typical and atypical variants (in addition to standard word forms) in the test phase given the length of the task, we cannot determine what children encoded about the specific label variants. Future work might further examine causal effects of exposure to label variants, such as improved long-term retention of word-object mappings [cf. @vlach2019learning] or better generalization to new label variants [cf. @regier2005emergence; @swingley2016two].
 
 Moment-to-moment attention, indexed by pupil size synchrony, was higher in both variation conditions relative to the consistent condition, and was highest in the typical variation condition. These results suggest reliable differences in children's engagement with the labeling sentences across conditions. Although pupil size synchrony during exposure did not reliably predict word-recognition accuracy during test, the trend toward a positive association in the typical variation condition is consistent with prior findings linking synchrony to learning [@nencheva2021moment]. These findings also fit with prior accounts of a "goldilocks" effect in children's attention [@kidd2012goldilocks; @kidd2014goldilocks], where a moderate amount of variability---here, variation of the type common in children's everyday language input---is associated with the highest engagement. Overall, our pupillometry findings point to attentional engagement as a plausible, though not yet definitively established, mechanism by which label variation, particularly of the type that children encounter naturalistically, could facilitate novel word learning over short timescales.
 
