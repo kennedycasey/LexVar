@@ -6,36 +6,18 @@ author:
     corresponding: true
     orcid: 0000-0001-5326-3080
     email: kcasey@princeton.edu
-    affiliations:
+    affiliation:
       - name: Princeton University
         department: Department of Psychology
-        address: 40 Woodlands Way
-        city: Princeton
-        region: NJ
-        country: USA
-        postal-code: 08544
+        address: "40 Woodlands Way, Princeton, NJ 08544"
   - name: Casey Lew-Williams
     orcid: 0000-0002-8781-4458
     email: caseylw@princeton.edu
-    affiliations:
+    affiliation:
       - name: Princeton University
         department: Department of Psychology
-        address: 40 Woodlands Way
-        city: Princeton
-        region: NJ
-        country: USA
-        postal-code: 08544
-author-note:
-  disclosures:
-    study-registration: "The study design and analysis plan was pre-registered ([https://osf.io/uqz6d](https://osf.io/uqz6d))"
-    data-sharing: "Anonymized data are available at LINK"
-    conflict-of-interest: "The authors declare no conflicts of interest"
-    financial-support: ~
-    gratitude: ~
-    authorship-agreements: ~
-abstract: "This document is a template."
-keywords: [word learning, child-directed speech, wordplay, eye-tracking]
-bibliography: LexVar.bib
+        address: "40 Woodlands Way, Princeton, NJ 08544"
+bibliography: LexVar-SM.bib
 format:
   apaquarto-docx: default
   apaquarto-html: default
@@ -52,344 +34,34 @@ execute:
 ```{r setup}
 library(tidyverse)
 library(readxl)
-library(english)
-library(tools)
-library(flextable)
-library(brms)
-library(loo)
-library(emmeans)
-
-# reprocess raw eye-tracking data? set to TRUE or FALSE
-reprocess = FALSE
-
-# reprocess pupillometry data? set to TRUE or FALSE
-reprocess.pupil = FALSE 
-
-if (reprocess) {
-  source("analysis/process.R")
-}
-
-if (reprocess.pupil) {
-  source("analysis/pupillometry.R")
-}
-
+library(lme4) 
+library(broom)
+library(broom.mixed)
 # set condition colors
 condition.colors <- c("stable" = "#ef5039", 
                       "unnaturalv" = "#04a48c", 
                       "naturalv" = "#3f5eaa")
-```
 
-# Method
-This study was pre-registered ([https://osf.io/uqz6d](https://osf.io/uqz6d)). All stimuli, anonymized data, and analysis scripts are publicly available at LINK.
-
-```{r, echo=FALSE}
+# read in metadata
 log <- read_xlsx("data/metadata/ANON-ptcp-log.xlsx")
+
 final.sample <- filter(log, usable_checked == "y") 
-usable <- final.sample %>% nrow()
-unusable <- filter(log, usable_checked == "n") %>% nrow() - 1 # subtracting since 1 child was accidentally double recruited
-unusable.cal <- filter(log, str_detect(exclusion_reason, "calibration|refused")) %>% nrow()
-unusable.data <- filter(log, str_detect(exclusion_reason, "trial")) %>% nrow()
-unusable.inter <- filter(log, str_detect(exclusion_reason, "interruption")) %>% nrow()
-unusable.lang <- filter(log, str_detect(exclusion_reason, "language")) %>% nrow()
-
-ethnicity <- final.sample %>%
-  mutate(ethnicity = case_when(
-    ethnicity %in% c("black", "asian", "not reported") ~ str_to_sentence(ethnicity), 
-    ethnicity == "white" ~ "Non-Latinx white", 
-    ethnicity == "white/hispanic" ~ "Latinx white", 
-    ethnicity %in% c("white/black", "asian/white", "mixed") ~ "Mixed race"
-  )) %>%
-  group_by(ethnicity) %>%
-  summarize(n = n()) %>%
-  ungroup() %>%
-  mutate(prop = round(n/sum(n)*100, 2)) %>%
-  arrange(desc(prop))
-
-sex <- final.sample %>%
-  group_by(sex) %>%
-  summarize(n = n())
 
 ages <- final.sample %>%
-  transmute(id = str_extract(ptcp_id, "[0-9][0-9][0-9]"), 
-            age_c = datawizard::standardize(age))
+  transmute(id=str_extract(ptcp_id, "[0-9][0-9][0-9]"), 
+            age_c=datawizard::standardize(age))
+
+# read in data
+data <- read_csv("data/prepped-data.csv")
+test.props <- read_csv("data/test-props.csv")
+test.props.bywindow <- read_csv("data/test-props-bywindow.csv")
+eyetrackingr.data <- read_csv("data/eyetrackingr-data.csv")
 ```
-
-## Participants
-Participants (_N_ = `r usable` total, `r filter(sex, sex == "F")$n` female, `r filter(sex, sex == "M")$n` male,), aged 18 to 36 months (*M*~age~ = `r format(round(mean(final.sample$age), 2), nsmall = 2)`), were full-term, monolingual English-hearing children (>80% reported exposure) with no known hearing, vision, language, and/or developmental delays. Caregivers self-reported race/ethnicity information for their children in an open-ended format when they initially signed up for our volunteer database. `r sub("^([a-z])", "\\U\\1", as.character(english(ethnicity[3,]$n)), perl = TRUE)` caregivers  (`r ethnicity[3,]$prop`% of the final sample) chose not to report this information. Participants were primarily `r ethnicity[1,]$ethnicity` (_N_ = `r ethnicity[1,]$n`, `r ethnicity[1,]$prop`%) with some representation of other races/ethnicities: Mixed race (_N_ = `r ethnicity[2,]$n`, `r ethnicity[2,]$prop`%), Asian (_N_ = `r ethnicity[4,]$n`, `r ethnicity[4,]$prop`%), Black (_N_ = `r ethnicity[5,]$n`, `r ethnicity[5,]$prop`%), `r ethnicity[6,]$ethnicity` (_N_ = `r ethnicity[6,]$n`, `r ethnicity[6,]$prop`%).
-
-The final sample size was pre-registered and determined using an a priori power analysis conducted in G*Power [@faul2009statistical] and informed by prior eye-tracking studies with a similar age range [@nencheva2021moment; @quam2023protracted]. `r sub("^([a-z])", "\\U\\1", as.character(english(unusable)), perl = TRUE)` additional children participated but were excluded from the final analyses due to refusal to wear the EyeLink target sticker or failure to complete calibration (_N_ = `r unusable.cal`), significant interruption by a family member (_N_ = `r unusable.inter`), contribution of too few usable trials based on pre-registered criteria due to fussiness or inattention (_N_ = `r unusable.data`), or failure to meet the language requirement (_N_ = `r unusable.lang`).
-
-All experimental protocols, including procedures for obtaining informed consent, were approved by the Princeton University Institutional Review Board (Approval: 0000007117, Language Learning: Sounds, Words, and Grammar).
-
-## Stimuli
-```{r stimuli}
-library(tuneR)
-training.audio <- "stimuli/training_audio/"
-testing.audio <- "stimuli/testing_audio/"
-
-training.wavs <- list.files(path = training.audio, pattern = "\\.wav$", full.names = TRUE)
-testing.wavs <- list.files(path = testing.audio, pattern = "\\.wav$", full.names = TRUE)
-
-training.durs <- tibble(file = training.wavs) %>%
-  mutate(
-    name = basename(file),
-    wav = map(file, readWave),
-    dur = round(map_dbl(wav, ~ length(.x@left) / .x@samp.rate) * 1000, 0)
-  ) %>%
-  summarize(mean = round(mean(dur), 0),
-            min = min(dur), 
-            max = max(dur))
-
-test.word.durs <- tibble(base_word = "bog", window = "first", dur = 615) %>%
-  add_row(base_word = "bog", window = "second", dur = 613) %>%
-  add_row(base_word = "mob", window = "first", dur = 621) %>%
-  add_row(base_word = "mob", window = "second", dur = 621) %>%
-  add_row(base_word = "kai", window = "first", dur = 622) %>%
-  add_row(base_word = "kai", window = "second", dur = 628) %>%
-  add_row(base_word = "tan", window = "first", dur = 625) %>%
-  add_row(base_word = "tan", window = "second", dur = 628) %>%
-  add_row(base_word = "voo", window = "first", dur = 630) %>%
-  add_row(base_word = "voo", window = "second", dur = 626) %>%
-  add_row(base_word = "woi", window = "first", dur = 627) %>%
-  add_row(base_word = "voo", window = "second", dur = 634) %>%
-  summarize(mean = round(mean(dur), 0),
-            min = min(dur), 
-            max = max(dur))
-  
-testing.dur <- tibble(file = testing.wavs) %>%
-  mutate(
-    name = basename(file),
-    wav = map(file, readWave),
-    dur = round(map_dbl(wav, ~ length(.x@left) / .x@samp.rate) * 1000, 0)
-  ) %>%
-  select(dur) %>%
-  distinct() %>%
-  pull(dur) - 4000 # accounting for 2 x 2000ms silent periods before and after trial
-```
-Auditory stimuli were recorded by female native English speaker using naturalistic child-directed prosody in a sound-attenuated room. Each target word (see Table 1) appeared in four different sentence frames for exposure trials ("Look, _____! That's a _____. Do you see the ______? Yes, that's a ______.") and in two different sentence frames for test trials ("Can you find the _____? See the _____?"). The exact same sentence frame recordings were used across all target words. Trials were created in Praat [@praat] by concatenating each target word onto the final position of each sentence frame. To avoid co-articulation artifacts in trials with articles preceding the target word, the target words were spliced along with the article. Exposure trials were `r format(training.durs$mean, scientific = FALSE, big.mark = ",")`ms long, on average (range = `r format(training.durs$min, scientific = FALSE, big.mark = ",")`--`r format(training.durs$max, scientific = FALSE, big.mark = ",")`ms), including 2000ms silent periods between exposure sentences. Test trials were all exactly `r testing.dur`ms long, with target word durations ranging from `r test.word.durs$min` to `r test.word.durs$max`ms (_M_ = `r test.word.durs$mean`ms) and including 2000ms silence between target sentences. All auditory stimuli were normed to a standard mean intensity of 65dB. Minor acoustic edits were made on some sentences to ensure that all trials sounded naturally produced and had comparable loudness and pitch.
-
-```{r stimuli-table}
-tribble(
-  ~Standard, ~`Reduplicated (Typical)`, ~`Reduplicated (Atypical)`, ~`Diminutivized (Typical)`, ~`Diminutivized (Atypical)`,
-  "tanzer\n/tæn.zɚ/", "tan-tan\n/tæn.tæn/", "zer-zer\n/zɚ.zɚ/", "tanny\n/tæn.i/", "y-zer\n/i.zɚ/",
-  "bogdum\n/bɑg.dʌm/", "bog-bog\n/bɑg.bɑg/", "dum-dum\n/dʌm.dʌm/", "boggy\n/bɑg.i/", "y-dum\n/i.dʌm/",
-  "kaisol\n/kaɪ.sɔl/", "kai-kai\n/kaɪ.kaɪ/", "sol-sol\n/sɔl.sɔl/", "kaisy\n/kaɪ.si/", "y-sol\n/i.sɔl/",
-  "mobet\n/moʊ.bɛt/", "mo-mo\n/moʊ.moʊ/", "bet-bet\n/bɛt.bɛt/", "moby\n/moʊ.bi/", "y-bet\n/i.bɛt/",
-  "woifer\n/wɔɪ.fɚ/", "woi-woi\n/wɔɪ.wɔɪ/", "fer-fer\n/fɚ.fɚ/", "woify\n/wɔɪ.fi/", "y-fer\n/i.fɚ/",
-  "voopin\n/vu.pɪn/", "voo-voo\n/vu.vu/", "pin-pin\n/pɪn.pɪn/", "voopy\n/vu.pi/", "y-pin\n/i.pɪn/"
-) %>% flextable() %>%
-  set_caption("Table 1. Target word forms.") %>%
-  set_table_properties(width = 1, layout = "autofit") %>%
-  fontsize(size = 10, part = "all") %>%
-  align(align = "left", part = "all")
-```
-
-The visual stimuli consisted of six isoluminant objects with 12 unique colors (two per object) that were modeled after @nencheva2021moment's stimuli and hand-drawn using Procreate software [@procreate].
-
-## Procedure
-Toddlers sat on their caregiver's lap, approximately 60cm away from a 17-inch monitor equipped with an EyeLink 1000 Plus eye-tracker, in a dimly-lit testing room. Caregivers wore opague sunglasses to prevent them from influencing their children's behavior. Participants wore a small EyeLink target sticker on their forehead. We used a 3-point calibration procedure along the horizontal dimension (x-axis) of the screen. 
-
-The experiment consisted of three blocks (1 per condition). Each block consisted of two phases: an exposure phase, during which participants learned novel word-object pairings, and a test phase, during which toddlers were immediately tested on their recognition of the word-object mappings. An isoluminant, non-linguistic attention-getting video was shown after every block.
-
-During the exposure phase (4 trials per block), children saw a single target object appear at the center of the screen. Before the onset of each trial, children saw a blank gray screen. Each trial started after a short, variable-length ITI (min: 250ms, max: 750ms, mean: 500ms) or when the participant looked at the screen. Next, the target object appeared silently on the screen for 1500ms or until the participant looked at the screen. Then, the exposure audio played (see stimulus details above). After the offset of the audio, the target object remained on the screen for an additional 1500ms.
-
-During the test phase (4 trials per block), toddlers saw the two objects from the preceding exposure phase side-by-side on the screen. Each trial started with an ITI (same structure as training phase), followed by a 2000ms silent period with both objects on the screen. Then, the target audio played (see stimulus details above). After the offset of the audio, the side-by-side objects remained on the screen for an additional 2000ms.
-
-## Conditions
-Participants learned words in three conditions (within-subjects manipulation). In all conditions, participants learned the names of two different novel objects across four alternating exposure trials (2 per word). In the _consistent_ condition, participants heard the standard form of the target word repeated 5x per trial (e.g., "Look, tanzer! That's a tanzer...tanzer. Do you see the tanzer? Yes, that's a tanzer."). In the _typical variation_ condition, participants heard the standard form of the target word repeated 2x per trial in addition to one reduplicated form and one diminutivized form per trial (e.g., "Look, tanzer! That's a tan-tan. Do you see the tanny? Yes, that's a tanzer."). Critically, the number of exposures to the first syllable of the target word (i.e., "tan") is equivalent across these two conditions. In the _atypical variation_ condition, participants heard the standard form of the target word repeated 2x per trial in addition to 1x exposure each of reversed versions of the typical reduplicated and diminutivized forms (e.g., "Look, tanzer! That's a zer-zer. Do you see the y-zer? Yes, that's a tanzer."). A full list of exposed word forms can be found in Table 1. 
-
-Participants were assigned to one of 18 pseudorandomized orders such that the order of presentation of blocks and the assignment of target labels to target objects was counterbalanced across conditions.
-
-```{r usable-stats}
-path <- "data/processed/usable/"
-usable <- tibble()
-for (i in list.files(path)) {
-  usable <- bind_rows(usable, 
-                      read_csv(paste0(path, i), show_col_types = FALSE))
-}
-
-n.conditions <- usable %>%
-  group_by(id) %>%
-  summarize(n = length(unique(condition))) %>%
-  ungroup() %>%
-  summarize(mean = round(mean(n), 2),
-            median = round(median(n), 2),
-            min = min(n),
-            max = max(n))
-
-n.trials <- usable %>%
-  group_by(id) %>%
-  summarize(n = length(unique(trial))) %>%
-  ungroup() %>%
-  summarize(mean = round(mean(n), 2),
-            median = round(median(n), 2),
-            min = min(n),
-            max = max(n))
-```
-## Data pre-processing
-Gaze behavior was used to determine toddlers' recognition of novel word-object pairings during two critical windows of analysis (300ms-2000ms following each target word onset; @fernald2008looking; @swingley2000spoken). We calculated participants' proportion looking to target objects during test trials as the measure of word-recognition accuracy. For any given test trial to be included in analyses, children must have looked to the target and/or distractor object at least once prior to the onset of the label and for at least 1/3 of each critical post-labeling window. In order for a block to be included, children must have contributed usable data for at least 2 of 4 test trials. Finally, in order for a participant to be included, they must have contributed at least 2 of 3 blocks. On average, participants contributed `r n.trials$mean` trials (median = `r n.trials$median`, range = `r n.trials$min`--`r n.trials$max`) across `r n.conditions$mean` conditions (median = `r n.conditions$median`).
-
-Following @nencheva2021moment, we first converted toddlers' raw pupil size values during exposure sentences (automatically recorded by the EyeLink eye-tracker) to percent change the average pupil size for that trial. We removed potential artifacts due to partial blinks by excluding any 0.05-s intervals with more than 15% change in pupil size [@merritt1994artifact]. We used Stineman interpolation to fill in gaps shorter than 100 ms using Stineman interpolation [@stinepack]. Finally, we excluded segments where more than 50% of the data were missing.
 
 # Results
 ## Word recognition measured by gaze behavior
-```{r test-prep}
-rewrite = FALSE
-path <- "data/processed/"
 
-if (rewrite) {
-  test.props <- tibble()
-  test.props.bywindow <- tibble()
-  frames <- tibble()
-  frames.cbp <- tibble()
-  
-  included.files <- list.files(path, "-test.csv")
-  
-  for (i in included.files) {
-    
-    curr.file <- read_csv(paste0(path, i))
-    
-    id <- str_extract(unique(curr.file$pid), "[0-9][0-9][0-9]")
-    
-    status <- filter(log, str_detect(ptcp_id, id))$usable_checked
-    
-    if (status != "n" & !is.na(status)) {
-      # read in usable trials from pre-processing stage
-      usable.trials <- read_csv(paste0("data/processed/usable/", id, ".csv")) %>%
-        pull(trial)
-      
-      if (length(usable.trials) > 0) {
-        
-      curr.file.cbp <- curr.file %>% 
-        select(pid, age_m, order, trial, x, pupil, base_word:window) %>%
-        filter(trial %in% usable.trials) %>%
-        group_by(pid, trial, condition, fix, base_word, window) %>%
-        filter(length(unique(frame)) >= (2000-300)/3) %>%
-        ungroup()
-        
-      curr.file <- curr.file %>%
-        select(pid, age_m, order, trial, x, pupil, base_word:window) %>%
-        filter(trial %in% usable.trials & !is.na(window)) %>%
-        group_by(pid, trial, condition, fix, base_word, window) %>%
-        filter(length(unique(frame)) >= (2000-300)/3) %>%
-        ungroup()
-
-      curr.test.props <- curr.file %>%
-        group_by(pid, trial, condition, fix, base_word) %>%
-        summarize(total = n()) %>%
-        pivot_wider(names_from = "fix", values_from = "total",
-                    id_cols = c(pid, trial, condition, base_word))
-
-      curr.test.props.bywindow <- curr.file %>%
-        group_by(pid, trial, condition, fix, base_word, window) %>%
-        summarize(total = n()) %>%
-        pivot_wider(names_from = "fix", values_from = "total",
-                    id_cols = c(pid, trial, condition, base_word, window))
-
-      if ("target" %in% colnames(curr.test.props)) {
-        curr.test.props <- curr.test.props %>%
-          mutate(target = ifelse(is.na(target), 0, target))
-
-      } else {
-        curr.test.props <- curr.test.props %>%
-          mutate(target = 0)
-      }
-
-      if ("distracter" %in% colnames(curr.test.props)) {
-        curr.test.props <- curr.test.props %>%
-          mutate(distracter = ifelse(is.na(distracter), 0, distracter))
-      } else {
-        curr.test.props <- curr.test.props %>%
-          mutate(distracter = 0)
-      }
-
-      curr.test.props <- curr.test.props %>%
-        mutate(total = target + distracter,
-               prop = target/total)
-
-      test.props <- bind_rows(test.props, curr.test.props)
-
-      if ("target" %in% colnames(curr.test.props.bywindow)) {
-        curr.test.props.bywindow <- curr.test.props.bywindow %>%
-          mutate(target = ifelse(is.na(target), 0, target))
-
-      } else {
-        curr.test.props.bywindow <- curr.test.props.bywindow %>%
-          mutate(target = 0)
-      }
-
-      if ("distracter" %in% colnames(curr.test.props.bywindow)) {
-        curr.test.props.bywindow <- curr.test.props.bywindow %>%
-          mutate(distracter = ifelse(is.na(distracter), 0, distracter))
-      } else {
-        curr.test.props.bywindow <- curr.test.props.bywindow %>%
-          mutate(distracter = 0)
-      }
-
-      curr.test.props.bywindow <- curr.test.props.bywindow %>%
-        mutate(total = target + distracter,
-               prop = target/total)
-
-      test.props.bywindow <- bind_rows(test.props.bywindow, curr.test.props.bywindow)
-
-      curr.frames <- curr.file %>%
-        select(pid, age_m, order, trial, x, pupil, base_word:window) %>%
-        filter(trial %in% usable.trials) %>%
-        mutate(fix_num = case_when(
-          fix == "distracter" ~ 0,
-          fix == "target" ~ 1,
-          TRUE ~ NA
-        ))
-      
-      curr.frames.cbp <- curr.file.cbp %>%
-        select(pid, age_m, order, trial, x, pupil, base_word:window) %>%
-        filter(trial %in% usable.trials) %>%
-        mutate(fix_num = case_when(
-          fix == "distracter" ~ 0, 
-          fix == "target" ~ 1, 
-          TRUE ~ NA
-        ))
-      
-      frames <- bind_rows(frames, curr.frames)
-      frames.cbp <- bind_rows(frames.cbp, curr.frames.cbp)
-      
-      }
-    }
-  }
-  
-  # export proportion looking data
-  write_csv(test.props, "data/test-props.csv")
-  write_csv(test.props.bywindow, "data/test-props-bywindow.csv")
-  
-  # export full timecourse data
-    data <- frames %>%
-      mutate(time = frame,
-             condition = factor(condition, levels = c("unnaturalv", "stable", "naturalv"))) %>%
-      select(pid, age_m, order, trial, condition, base_word, pupil, time, fix_num, window,
-             first_label, second_label) %>%
-      group_by(pid) %>%
-      mutate(block_order = list(unique(condition))) %>%
-      ungroup() %>%
-      mutate(condition_order = map2_int(block_order, condition, ~which(.x == .y)))
-    write_csv(data, "data/prepped-data.csv")
-    
-    # export eyetrackingR version of data
-    eyetrackingr.data <- frames.cbp %>%
-      mutate(time = frame, 
-             condition = factor(condition, levels = c("unnaturalv", "stable", "naturalv"))) %>%
-      mutate(target = ifelse(fix_num == 1, 1, 0),
-             distracter = ifelse(fix_num == 0, 1, 0)) %>%
-      select(-fix_num)
-    write_csv(eyetrackingr.data, "data/eyetrackingr-data.csv")
-} else {
-  data <- read_csv("data/prepped-data.csv")
-  test.props <- read_csv("data/test-props.csv")
-  test.props.bywindow <- read_csv("data/test-props-bywindow.csv")
-  eyetrackingr.data <- read_csv("data/eyetrackingr-data.csv")
-}
-```
-
-```{r test-bayes, results = "hide"}
+```{r test-binomial, results = "hide"}
 model.data <- test.props %>%
   mutate(id = str_extract(pid, "[0-9][0-9][0-9]")) %>%
   left_join(ages, by = "id") %>%
@@ -400,143 +72,36 @@ model.data.bywindow <- test.props.bywindow %>%
   left_join(ages, by = "id") %>%
   mutate(condition = relevel(as.factor(condition), ref = "unnaturalv"))
 
-rerun = FALSE
-if (rerun) {
-  m.age <- brm(
-    bf(prop ~ condition + age_c + (1 + condition | id) + (1 + condition + age_c | base_word),
-     phi ~ condition + age_c,
-     zoi ~ condition + age_c,
-     coi ~ condition + age_c),
-  data = model.data,
-  family = zero_one_inflated_beta(),
-  chains = 4,
-  cores = 4,
-  save_pars = save_pars(all = TRUE),
-  iter = 2000,
-  warmup = 1000,
-  seed = 20250803,
-  control = list(adapt_delta = 0.999)
-  )
-  saveRDS(m.age, file = "models/m-age.rds")
-  
-  m.age.int <- brm(
-  bf(prop ~ condition * age_c + (1 + condition | id) + (1 + condition * age_c | base_word),
-     phi ~ condition * age_c,
-     zoi ~ condition * age_c,
-     coi ~ condition * age_c),
-  data = model.data,
-  family = zero_one_inflated_beta(),
-  chains = 4,
-  cores = 4,
-  save_pars = save_pars(all = TRUE),
-  iter = 2000,
-  warmup = 1000,
-  seed = 20250803,
-  control = list(adapt_delta = 0.999)
-  )
-  saveRDS(m.age.int, file = "models/m-age-int.rds")
-  
-  m.window1 <- brm(
-  bf(prop ~ condition + age_c + (1 + condition | id) + (1 + condition + age_c | base_word),
-     phi ~ condition + age_c,
-     zoi ~ condition + age_c,
-     coi ~ condition + age_c),
-  data = filter(model.data.bywindow, window == "first"),
-  family = zero_one_inflated_beta(),
-  chains = 4,
-  cores = 4,
-  iter = 2000,
-  warmup = 1000,
-  seed = 20250803,
-  control = list(adapt_delta = 0.999)
-)
-  saveRDS(m.window1, file = "models/m-window1.rds")
+# maximal model fails to converge --> simplify
+m.age <- glmer(prop ~ condition + age_c + 
+                 (1 | id) + (1 | base_word), 
+               data = model.data, 
+               family = binomial)
 
-  m.window2 <- brm(
-  bf(prop ~ condition + age_c + (1 + condition | id) + (1 + condition + age_c | base_word),
-     phi ~ condition + age_c,
-     zoi ~ condition + age_c,
-     coi ~ condition + age_c),
-  data = filter(model.data.bywindow, window == "second"),
-  family = zero_one_inflated_beta(),
-  chains = 4,
-  cores = 4,
-  iter = 2000,
-  warmup = 1000,
-  seed = 20250803,
-  control = list(adapt_delta = 0.999)
-)
-  saveRDS(m.window2, file = "models/m-window2.rds")
-  
-  # compare models (pre-registered plan)
-  loo1 <- loo(m.age, moment_match = TRUE, reloo = TRUE)
-  loo2 <- loo(m.age.int, moment_match = TRUE, reloo = TRUE)
-  comp <- loo_compare(loo1, loo2) %>%
-    as_tibble() %>%
-    tibble::rownames_to_column(var = "model") %>%
-    write_csv("models/compare.csv")
-} else {
-  m.age <- readRDS("models/m-age.rds")
-  m.age.int <- readRDS("models/m-age-int.rds")
-  m.window1 <- readRDS("models/m-window1.rds")
-  m.window2 <- readRDS("models/m-window2.rds")
-  comp <- read_csv("models/compare.csv")
-}
+# interaction 
+m.age.int <- glmer(prop ~ condition * age_c + 
+                 (1 | id) + (1 | base_word), 
+               data = model.data, 
+               family = binomial)
 
-first.window <- 300:2000
-second.window <- (mean(data$second_label) - 
-                    mean(data$first_label) + 300):(mean(data$second_label) - 
-                                                        mean(data$first_label)+2000)
+m.age.comp <- anova(m.age, m.age.int) %>% tidy()
 
-library(tidybayes)
-# summarize posterior
-m.age_summary <- as_draws_df(m.age) %>%
-    pivot_longer(cols = starts_with("b_"), 
-                 names_to = "parameter", 
-                 values_to = "value") %>%
-  group_by(parameter) %>%
-  mean_qi(.width = 0.89) %>%
-  select(parameter, starts_with("value"))
+# maximal model does not converge --> singularity issues --> simplify
+m.window1 <- glmer(prop ~ condition + age_c + (1 | id), 
+                   data = filter(model.data.bywindow, window == "first"), 
+                   family = binomial)
 
-m.window1_summary <- as_draws_df(m.window1) %>%
-    pivot_longer(cols = starts_with("b_"), 
-                 names_to = "parameter", 
-                 values_to = "value") %>%
-  group_by(parameter) %>%
-  mean_qi(.width = 0.89) %>%
-  select(parameter, starts_with("value"))
+m.window2 <- glm(prop ~ condition + age_c, 
+                   data = filter(model.data.bywindow, window == "second"), 
+                   family = binomial)
 
-m.window2_summary <- as_draws_df(m.window2) %>%
-    pivot_longer(cols = starts_with("b_"), 
-                 names_to = "parameter", 
-                 values_to = "value") %>%
-  group_by(parameter) %>%
-  mean_qi(.width = 0.89) %>%
-  select(parameter, starts_with("value"))
+m.age.effects <- tidy(m.age, effects = "fixed", conf.int = TRUE)
+m.window1.effects <- tidy(m.window1, effects = "fixed", conf.int = TRUE)
+m.window2.effects <- tidy(m.window2, conf.int = TRUE)
 
-conditional_effects(m.age)
-
-# generate posterior predictions per condition
-newdata <- data.frame(
-  condition = factor(c("unnaturalv", "stable", "naturalv"), levels = levels(model.data$condition)), 
-  age_c = 0
-)
-
-# get fitted estimates of the mean (mu parameter of the beta)
-preds <- posterior_epred(m.window2, newdata = newdata, re_formula = NA)
-
-# calculate means and 89% credible intervals
-pred_summary <- as.data.frame(preds) %>%
-  setNames(levels(newdata$condition)) %>%
-  pivot_longer(everything(), names_to = "condition", values_to = "mu") %>%
-  group_by(condition) %>%
-  summarize(
-    mean = mean(mu),
-    ci_lower = quantile(mu, 0.055),
-    ci_upper = quantile(mu, 0.945)
-  )
-
-print(pred_summary)
+emmeans(m.age, ~ condition, at = list(age_c = 0), type = "response")
+emmeans(m.window1, ~ condition, at = list(age_c = 0), type = "response")
+emmeans(m.window2, ~ condition, at = list(age_c = 0), type = "response")
 ```
 ```{r test-bayes-reporting}
 library(tidybayes)
@@ -1185,9 +750,3 @@ We also examined pupil size synchrony at the word level. A one-way ANOVA reveale
 
 ::: {#refs}
 :::
-
-# Funding
-This research was supported by a XXX awarded to CLW (XXX) and a National Science Foundation Graduate Research Fellowship awarded to KC.
-
-# Acknowledgements
-We are grateful to the participating families as well as the members of the Princeton Baby Lab for their feedback on this work.
