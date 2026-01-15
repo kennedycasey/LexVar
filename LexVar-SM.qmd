@@ -34,13 +34,32 @@ execute:
 ```{r setup}
 library(tidyverse)
 library(readxl)
-library(lme4) 
+library(tidybayes)
+library(posterior)
+library(flextable)
+library(lme4)
+library(lmerTest)
 library(broom)
 library(broom.mixed)
+library(emmeans)
+library(brms)
+library(loo)
+library(papaja)
+
 # set condition colors
 condition.colors <- c("stable" = "#ef5039", 
                       "unnaturalv" = "#04a48c", 
                       "naturalv" = "#3f5eaa")
+
+# create custom theme for consistent plotting
+theme_custom <- function(base_size=15) {
+  theme_test(base_size=base_size) +
+    theme(
+      legend.position="none",
+      strip.text=element_text(face="bold"),
+      axis.title=element_text(face="bold")
+    )
+}
 
 # read in metadata
 log <- read_xlsx("data/metadata/ANON-ptcp-log.xlsx")
@@ -56,53 +75,298 @@ data <- read_csv("data/prepped-data.csv")
 test.props <- read_csv("data/test-props.csv")
 test.props.bywindow <- read_csv("data/test-props-bywindow.csv")
 eyetrackingr.data <- read_csv("data/eyetrackingr-data.csv")
+
+# re-run brms models? set to TRUE or FALSE
+rerun = FALSE
 ```
 
 # Results
 ## Word recognition measured by gaze behavior
 
-```{r test-binomial, results = "hide"}
+```{r test-bayes, results="hide"}
 model.data <- test.props %>%
-  mutate(id = str_extract(pid, "[0-9][0-9][0-9]")) %>%
-  left_join(ages, by = "id") %>%
-  mutate(condition = relevel(as.factor(condition), ref = "unnaturalv"))
+  mutate(id=str_extract(pid, "[0-9][0-9][0-9]")) %>%
+  left_join(ages, by="id") %>%
+  mutate(condition=relevel(as.factor(condition), ref="unnaturalv"))
 
 model.data.bywindow <- test.props.bywindow %>%
-  mutate(id = str_extract(pid, "[0-9][0-9][0-9]")) %>%
-  left_join(ages, by = "id") %>%
-  mutate(condition = relevel(as.factor(condition), ref = "unnaturalv"))
+  mutate(id=str_extract(pid, "[0-9][0-9][0-9]")) %>%
+  left_join(ages, by="id") %>%
+  mutate(condition=relevel(as.factor(condition), ref="unnaturalv"))
 
-# maximal model fails to converge --> simplify
-m.age <- glmer(prop ~ condition + age_c + 
-                 (1 | id) + (1 | base_word), 
-               data = model.data, 
-               family = binomial)
+if (rerun) {
+  m.age <- brm(
+    bf(prop ~ condition + age_c + (1 + condition | id) + (1 + condition + age_c | base_word),
+     phi ~ condition + age_c,
+     zoi ~ condition + age_c,
+     coi ~ condition + age_c),
+  data=model.data,
+  family=zero_one_inflated_beta(),
+  chains=4,
+  cores=4,
+  save_pars=save_pars(all=TRUE),
+  iter=2000,
+  warmup=1000,
+  seed=20250803,
+  control=list(adapt_delta=0.999)
+  )
+  saveRDS(m.age, file="models/m-age.rds")
+  
+  m.age.int <- brm(
+  bf(prop ~ condition * age_c + (1 + condition | id) + (1 + condition * age_c | base_word),
+     phi ~ condition * age_c,
+     zoi ~ condition * age_c,
+     coi ~ condition * age_c),
+  data=model.data,
+  family=zero_one_inflated_beta(),
+  chains=4,
+  cores=4,
+  save_pars=save_pars(all=TRUE),
+  iter=2000,
+  warmup=1000,
+  seed=20250803,
+  control=list(adapt_delta=0.999)
+  )
+  saveRDS(m.age.int, file="models/m-age-int.rds")
+  
+  
+    
+  m.window <- brm(
+  bf(prop ~ condition * window + age_c + (1 + condition * window | id) + (1 + condition * window + age_c | base_word),
+     phi ~ condition * window + age_c,
+     zoi ~ condition * window + age_c,
+     coi ~ condition * window + age_c),
+  data=model.data.bywindow,
+  family=zero_one_inflated_beta(),
+  chains=4,
+  cores=4,
+  iter=4000,
+  warmup=2000,
+  seed=20250803,
+  control=list(adapt_delta=0.999)
+)
+  saveRDS(m.window, file="models/m-window.rds")
 
-# interaction 
-m.age.int <- glmer(prop ~ condition * age_c + 
-                 (1 | id) + (1 | base_word), 
-               data = model.data, 
-               family = binomial)
+  
+  m.window1 <- brm(
+  bf(prop ~ condition + age_c + (1 + condition | id) + (1 + condition + age_c | base_word),
+     phi ~ condition + age_c,
+     zoi ~ condition + age_c,
+     coi ~ condition + age_c),
+  data=filter(model.data.bywindow, window == "first"),
+  family=zero_one_inflated_beta(),
+  chains=4,
+  cores=4,
+  iter=2000,
+  warmup=1000,
+  seed=20250803,
+  control=list(adapt_delta=0.999)
+)
+  saveRDS(m.window1, file="models/m-window1.rds")
 
-m.age.comp <- anova(m.age, m.age.int) %>% tidy()
+  m.window2 <- brm(
+  bf(prop ~ condition + age_c + (1 + condition | id) + (1 + condition + age_c | base_word),
+     phi ~ condition + age_c,
+     zoi ~ condition + age_c,
+     coi ~ condition + age_c),
+  data=filter(model.data.bywindow, window == "second"),
+  family=zero_one_inflated_beta(),
+  chains=4,
+  cores=4,
+  iter=2000,
+  warmup=1000,
+  seed=20250803,
+  control=list(adapt_delta=0.999)
+)
+  saveRDS(m.window2, file="models/m-window2.rds")
+  
+  # compare models (pre-registered plan)
+  loo1 <- loo(m.age, moment_match=TRUE, reloo=TRUE)
+  loo2 <- loo(m.age.int, moment_match=TRUE, reloo=TRUE)
+  comp <- loo_compare(loo1, loo2) %>%
+    as_tibble() %>%
+    tibble::rownames_to_column(var="model") %>%
+    write_csv("models/compare.csv")
+} else {
+  m.age <- readRDS("models/m-age.rds")
+  m.age.int <- readRDS("models/m-age-int.rds")
+  m.window1 <- readRDS("models/m-window1.rds")
+  m.window2 <- readRDS("models/m-window2.rds")
+  comp <- read_csv("models/compare.csv")
+}
 
-# maximal model does not converge --> singularity issues --> simplify
-m.window1 <- glmer(prop ~ condition + age_c + (1 | id), 
-                   data = filter(model.data.bywindow, window == "first"), 
-                   family = binomial)
+first.window <- 300:2000
+second.window <- (mean(data$second_label) - 
+                    mean(data$first_label) + 300):(mean(data$second_label) - 
+                                                        mean(data$first_label)+2000)
 
-m.window2 <- glm(prop ~ condition + age_c, 
-                   data = filter(model.data.bywindow, window == "second"), 
-                   family = binomial)
+library(tidybayes)
+# summarize posterior
+m.age_summary <- as_draws_df(m.age) %>%
+    pivot_longer(cols=starts_with("b_"), 
+                 names_to="parameter", 
+                 values_to="value") %>%
+  group_by(parameter) %>%
+  mean_qi(.width=0.89) %>%
+  select(parameter, starts_with("value"))
 
-m.age.effects <- tidy(m.age, effects = "fixed", conf.int = TRUE)
-m.window1.effects <- tidy(m.window1, effects = "fixed", conf.int = TRUE)
-m.window2.effects <- tidy(m.window2, conf.int = TRUE)
+m.window1_summary <- as_draws_df(m.window1) %>%
+    pivot_longer(cols=starts_with("b_"), 
+                 names_to="parameter", 
+                 values_to="value") %>%
+  group_by(parameter) %>%
+  mean_qi(.width=0.89) %>%
+  select(parameter, starts_with("value"))
 
-emmeans(m.age, ~ condition, at = list(age_c = 0), type = "response")
-emmeans(m.window1, ~ condition, at = list(age_c = 0), type = "response")
-emmeans(m.window2, ~ condition, at = list(age_c = 0), type = "response")
+m.window2_summary <- as_draws_df(m.window2) %>%
+    pivot_longer(cols=starts_with("b_"), 
+                 names_to="parameter", 
+                 values_to="value") %>%
+  group_by(parameter) %>%
+  mean_qi(.width=0.89) %>%
+  select(parameter, starts_with("value"))
 ```
+
+
+```{r posterior-predictions}
+# generate posterior predictions per condition
+newdata <- data.frame(
+  condition=factor(c("unnaturalv", "stable", "naturalv"), levels=levels(model.data$condition)), 
+  age_c=0
+)
+
+# get fitted estimates of the mean (mu parameter of the beta)
+preds <- posterior_epred(m.age, newdata=newdata, re_formula=NA)
+preds_window1 <- posterior_epred(m.window1, newdata=newdata, re_formula=NA)
+preds_window2 <- posterior_epred(m.window2, newdata=newdata, re_formula=NA)
+
+# calculate means and 89% credible intervals
+pred_summary <- as.data.frame(preds) %>%
+  setNames(levels(newdata$condition)) %>%
+  pivot_longer(everything(), names_to="condition", values_to="mu") %>%
+  group_by(condition) %>%
+  summarize(
+    mean=mean(mu),
+    ci_lower=quantile(mu, probs=0.055, names=FALSE),
+    ci_upper=quantile(mu, probs=0.945, names=FALSE)
+  )
+
+pred_summary1 <- as.data.frame(preds_window1) %>%
+  setNames(levels(newdata$condition)) %>%
+  pivot_longer(everything(), names_to="condition", values_to="mu") %>%
+  group_by(condition) %>%
+  summarize(
+    mean=mean(mu),
+    ci_lower=quantile(mu, 0.055),
+    ci_upper=quantile(mu, 0.945)
+  )
+
+pred_summary2 <- as.data.frame(preds_window2) %>%
+  setNames(levels(newdata$condition)) %>%
+  pivot_longer(everything(), names_to="condition", values_to="mu") %>%
+  group_by(condition) %>%
+  summarize(
+    mean=mean(mu),
+    ci_lower=quantile(mu, 0.055),
+    ci_upper=quantile(mu, 0.945)
+  )
+
+draws <- as_draws_df(m.age)
+summary <- summarize_draws(draws)
+```
+
+Our primary analysis examined whether children successfully learned novel-word object mappings across conditions. Using the `brms` package [@brms], we fit mixed-effects zero-one inflated beta regression models[^2] to examine the effects of condition and age on children's novel word-recognition accuracy (i.e., proportion looking to the target object). Models included fixed effects for condition (atypical variation vs. consistent vs. typical variation) and mean-centered age[^3], along with the maximal random effects structure (by-participant and by-item random slopes and intercepts). We used weakly informative priors (standard normal distributions) and fitted the model using Hamiltonian Monte Carlo sampling (four chains, four cores) implemented in Stan [@rstan]. All $\hat{R}$ values were 1.00, indicating good convergence. Effective sample sizes (Bulk ESS: `r round(min(summary$ess_bulk, na.rm=TRUE), 0)`--`r format(round(max(summary$ess_bulk, na.rm=TRUE), 0), big.mark=",")`; Tail ESS: `r round(min(summary$ess_tail, na.rm=TRUE), 0)`--`r format(round(max(summary$ess_tail, na.rm=TRUE), 0), big.mark=",")`) were sufficiently large, indicating stable and reliable posterior estimates.
+
+[^2]: Beta regression was chosen to model the proportional dependent variable [@cribari2010beta]. Specifically, we used zero-one-inflated models since 0s and 1s were common values in our data [@liu2018review]. Note that this particular modeling approach requires a Bayesian framework to interpret. Importantly, this analytic approach allows us to quantify evidence in support of the null hypothesis, not simply against it. A frequentist beta regression using the `glmmTMB` package [@glmmTMB] roughly approximated the same trend, but this approach is limited in two key ways: (1) this model cannot accurately capture boundary values [see @liu2018review for relevant discussion], and (2) the model fails to converge with the maximal random effects structure, which forced us to remove the random slope for condition and thus reduced our ability to detect within-subject effects of condition.
+
+[^3]: Following our pre-registered analysis plan, we tested whether including an interaction between condition and age improved model fit---we compared the model with the interaction term to the simpler additive model using approximate leave-one-out cross-validation [LOO, @loo]. This analysis suggested no reliable difference in predictive accuracy, providing no strong evidence that the interaction term improved model fit (ΔELPD=`r format(round(filter(comp, model == 2)$elpd_diff, 2), nsmall=2)`, ΔSE=`r format(round(filter(comp, model == 2)$se_diff, 2), nsmall=2)`).
+
+Children's performance was reliably above chance overall as well as in both critical windows across all conditions, except for the first critical window---the primary target of analysis in the vast majority of LWL studies [e.g., @fernald2008looking]---for the atypical variation condition, where children's looking behavior was at chance level (*M*=`r format(round(filter(pred_summary1, condition == "unnaturalv")$mean, 2))`, 89% CrI \[`r format(round(filter(pred_summary1, condition == "unnaturalv")$ci_lower, 2))`, `r format(round(filter(pred_summary1, condition == "unnaturalv")$ci_upper, 2), nsmall=2)`\]). Across both critical windows, model-predicted accuracy was highest in the typical variation condition (*M*=`r format(round(filter(pred_summary, condition == "naturalv")$mean, 2))`, 89% CrI \[`r format(round(filter(pred_summary, condition == "naturalv")$ci_lower, 2))`, `r format(round(filter(pred_summary, condition == "naturalv")$ci_upper, 2))`\]), followed by the consistent condition (*M*=`r format(round(filter(pred_summary, condition == "stable")$mean, 2))`, 89% CrI \[`r format(round(filter(pred_summary, condition == "stable")$ci_lower, 2))`, `r format(round(filter(pred_summary, condition == "stable")$ci_upper, 2))`\]), and lowest in the atypical variation condition (*M*=`r format(round(filter(pred_summary, condition == "unnaturalv")$mean, 2))`, 89% CrI \[`r format(round(filter(pred_summary, condition == "unnaturalv")$ci_lower, 2))`, `r format(round(filter(pred_summary, condition == "unnaturalv")$ci_upper, 2))`\]). **Figure 1** shows model-predicted accuracy across conditions for the two critical windows. **Table 2** shows all model parameter estimates for fixed effects, and below, we break down the key results that are of theoretical interest.
+
+```{r fig, fig.cap="Figure 1. Posterior predicted accuracy by condition across both post-labeling time windows. Point ranges reflect posterior means with 89% credible intervals. Jittered dots show raw means for individual participants. Dotted line at 0.5 indicates chance looking.", fig.width=8, fig.height=5}
+
+raw_summary <- model.data.bywindow %>%
+  mutate(condition=factor(condition, levels=c("unnaturalv", "stable", "naturalv"))) %>%
+  group_by(pid, condition, window) %>%
+  summarize(prop=mean(prop)) %>%
+  ungroup() %>%
+  mutate(model=ifelse(window == "first", "Post-labeling window 1", "Post-labeling window 2"))
+
+pred_summary1 <- pred_summary1 %>%
+  mutate(model="Post-labeling window 1")
+
+pred_summary2 <- pred_summary2 %>%
+  mutate(model="Post-labeling window 2")
+
+pred_all <- bind_rows(pred_summary1, pred_summary2) %>%
+  mutate(
+    model=factor(model, levels=c("Post-labeling window 1", "Post-labeling window 2")),
+    condition=factor(condition, levels=c("unnaturalv", "stable", "naturalv"))
+  )
+
+fig1 <- ggplot(pred_all, aes(x=condition, y=mean, ymin=ci_lower, ymax=ci_upper, color=condition)) +
+  geom_hline(yintercept=0.5, linetype="dashed", color="gray") + 
+    geom_jitter(data=raw_summary, 
+                mapping=aes(x=condition, 
+                              y=prop, 
+                              color=condition), 
+              inherit.aes=FALSE, alpha=0.15,  width=0.05, size=1.5) + 
+  geom_point(size=3, position=position_dodge(width=0.5)) +
+  geom_errorbar(width=0.2, size=1.2, position=position_dodge(width=0.5)) +
+  facet_wrap(~model) +
+  scale_color_manual(values=condition.colors) +
+  scale_x_discrete(labels=c("Atypical\nvariation", 
+                              "Consistent", 
+                              "Typical\nvariation")) + 
+  labs(
+    x="Condition",
+    y="Posterior predicted proportion\nlooking to target object",
+    color="Condition"
+  ) +
+  theme_custom()
+ggsave("FigureS1.png", fig1, width=8, height=5, dpi=300)
+knitr::include_graphics("FigureS1.png")
+```
+
+The beta ($\mu$) component of the model, which estimates effects on the mean outcome for non-boundary values (i.e., proportions between but not including 0 or 1), showed positive effects for both the typical variation condition (*β*=`r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall=2)`\]) and the consistent condition (*β*=`r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall=2)`\]), relative to the atypical variation condition. Although the credible intervals include zero, the direction and magnitude of these effects suggest a possible learning advantage for both typical variation and consistency over atypical variation. The effect of mean-centered age was negligible (*β*=`r format(round(filter(m.age_summary, parameter == "b_age_c")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_age_c")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_age_c")$value.upper, 2), nsmall=2)`\]).
+
+The conditional one-inflation (coi) component, which estimates, among boundary values, the probability of being 1 (vs. 0), also showed similar trends for the effect of condition. Participants were more likely to respond at ceiling for both the typical variation condition (*β*=`r format(round(filter(m.age_summary, parameter == "b_coi_conditionnaturalv")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_coi_conditionnaturalv")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_coi_conditionnaturalv")$value.upper, 2), nsmall=2)`\]) and consistent condition (*β*=`r format(round(filter(m.age_summary, parameter == "b_coi_conditionstable")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_coi_conditionstable")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_coi_conditionstable")$value.upper, 2), nsmall=2)`\]), relative to the atypical variation condition. While these condition effects remain uncertain given the credible interval overlap with zero, their alignment with estimates from the $\mu$ component suggests additional evidence for an advantage of both typical variation and consistency over atypical variation. The effect of age was clearly positive (*β*=`r format(round(filter(m.age_summary, parameter == "b_coi_age_c")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_coi_age_c")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_coi_age_c")$value.upper, 2), nsmall=2)`\]), indicating that older children were more likely to demonstrate 100% looking to the target object during the critical analysis windows.
+
+```{r main-effects-table-prep}
+format_est <- function(df, param) {
+  row <- filter(df, parameter == param)
+  sprintf("%.2f [%.2f, %.2f]", row$value, row$value.lower, row$value.upper)
+}
+params <- tribble(
+  ~Effect, ~Param,
+  "μ: condition (typical variation)", "b_conditionnaturalv",
+  "μ: condition (consistent)", "b_conditionstable",
+  "μ: age", "b_age_c",
+  "zoi: condition (typical variation)", "b_zoi_conditionnaturalv",
+  "zoi: condition (consistent)", "b_zoi_conditionstable",
+  "zoi: age", "b_zoi_age_c",
+  "coi: condition (typical variation)", "b_coi_conditionnaturalv",
+  "coi: condition (consistent)", "b_coi_conditionstable",
+  "coi: age", "b_coi_age_c"
+)
+
+summary_table <- params %>%
+  mutate(
+    `Overall`=map_chr(Param, ~ format_est(m.age_summary, .x)),
+    `Window 1`=map_chr(Param, ~ format_est(m.window1_summary, .x)),
+    `Window 2`=map_chr(Param, ~ format_est(m.window2_summary, .x))
+  ) %>%
+  select(-Param)
+```
+
+```{r table-main-effects}
+#| tbl-cap: "Table 2. Posterior means and 89% credible intervals for each effect across models."
+apa_table(
+  summary_table,
+  note="The overall model includes both post-labeling windows (averaged accuracy) and the window-specific models include proportion estimates for 300--2,000ms following each target word onset. The μ component models the predicted accuracy (i.e., proportion looking to the target object) for non-boundary values (values between but not including 0 or 1). The zoi (zero-one inflation) component models the likelihood of accuracy being a boundary value---floor (0) or ceiling (1). The coi (conditional-one inflation) component models the probability of ceiling responses (1s) among boundary values."
+)
+```
+
 ```{r test-bayes-reporting}
 library(tidybayes)
 library(posterior)
