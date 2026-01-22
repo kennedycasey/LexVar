@@ -514,29 +514,15 @@ m.age.summary <- m.age %>%
   mutate(or = round(estimate, 2), 
          se = round(std.error, 2), 
          p = round(p.value, 3))
-
-# explore window effects 
-## simplify models to deal with non-convergence
-m.window <- glmer(prop ~ condition * window + age_c + (1 | id), 
-               data = model.data.bywindow, 
-               family = binomial)
-
-m.window1 <- glmer(prop ~ condition + age_c + (1 | id), 
-                   data = filter(model.data.bywindow, window == "first"), 
-                   family = binomial)
-
-m.window2 <- glm(prop ~ condition + age_c, 
-                   data = filter(model.data.bywindow, window == "second"), 
-                   family = binomial)
-
-
 ```
 
-Our primary analysis examined whether toddlers successfully learned novel word--object mappings across conditions. Using the `lme4` package [@lme4], we fit a mixed-effects logistic regression model to test the effects of condition and age on children's novel word-recognition accuracy (i.e., proportion looking to the target object). The model included fixed effects for condition (atypical variation vs. consistent vs. typical variation) and mean-centered age[^2], along with the maximal random effects structure that allowed for model convergence (by-participant and by-item random intercepts). 
+Our primary pre-registered analysis examined whether toddlers successfully learned novel word--object mappings across conditions. Using the `lme4` package [@lme4], we fit a mixed-effects logistic regression model to test the effects of condition and age on children's novel word-recognition accuracy (i.e., proportion looking to the target object). The model included fixed effects for condition (atypical variation vs. consistent vs. typical variation) and mean-centered age[^2], along with the maximal random effects structure that allowed for model convergence (by-participant and by-item random intercepts). We also replicated this analysis using zero-one-inflated beta regression under a Bayesian framework [@liu2018review], which yielded similar results (see Supplementary Materials).
 
 As predicted, toddlers' performance was reliably above chance in the consistent condition (estimated marginal mean (EMM) = `r round(filter(pred.age, condition == "stable")$prob, 2)`, *SE* = `r round(filter(pred.age, condition == "stable")$SE, 2)`, 95% CI [`r round(filter(pred.age, condition == "stable")$asymp.LCL, 2)`, `r round(filter(pred.age, condition == "stable")$asymp.UCL, 2)`]). In addition, as predicted, toddlers' performance was at chance in the atypical variation condition (EMM = `r round(filter(pred.age, condition == "unnaturalv")$prob, 2)`, *SE* = `r round(filter(pred.age, condition == "naturalv")$SE, 2)`, 95% CI [`r round(filter(pred.age, condition == "unnaturalv")$asymp.LCL, 2)`, `r round(filter(pred.age, condition == "unnaturalv")$asymp.UCL, 2)`]). The main condition of theoretical interest was the typical variation condition, in which we found that toddlers performed reliably above chance (EMM = `r format(round(filter(pred.age, condition == "naturalv")$prob, 2), nsmall = 2)`, *SE* = `r round(filter(pred.age, condition == "naturalv")$SE, 2)`, 95% CI [`r round(filter(pred.age, condition == "naturalv")$asymp.LCL, 2)`, `r round(filter(pred.age, condition == "naturalv")$asymp.UCL, 2)`]). **Figure 1** shows model-predicted accuracy across conditions. 
 
-Model parameter estimates revealed a significant positive effect of the consistent condition (vs. the atypical variation condition, *OR* = `r filter(m.age.summary, term == "conditionstable")$or`, *SE* = `r filter(m.age.summary, term == "conditionstable")$se`, *p* = `r format(filter(m.age.summary, term == "conditionstable")$p, nsmall = 3)`), and a positive but non-significant effect of the typical variation condition (vs. the atypical variation condition, *OR* = `r filter(m.age.summary, term == "conditionnaturalv")$or`, *SE* = `r filter(m.age.summary, term == "conditionnaturalv")$se`, *p* = `r format(filter(m.age.summary, term == "conditionnaturalv")$p, nsmall = 3)`) on overall accuracy. Toddlers' proportion looking to target also increased significantly with age, as hypothesized (*OR* = `r filter(m.age.summary, term == "age_c")$or`, *SE* = `r format(filter(m.age.summary, term == "age_c")$se, nsmall = 2)`, *p* = `r format(filter(m.age.summary, term == "age_c")$p, nsmall = 3)`). See Supplemental Materials for parallel results from analyses using zero-one-inflated beta regression under a Bayesian framework [@liu2018review].
+Model parameter estimates revealed a significant positive effect of the consistent condition (*OR* = `r filter(m.age.summary, term == "conditionstable")$or`, *SE* = `r filter(m.age.summary, term == "conditionstable")$se`, *p* = `r format(filter(m.age.summary, term == "conditionstable")$p, nsmall = 3)`), and a positive but non-significant effect of the typical variation condition (*OR* = `r filter(m.age.summary, term == "conditionnaturalv")$or`, *SE* = `r filter(m.age.summary, term == "conditionnaturalv")$se`, *p* = `r format(filter(m.age.summary, term == "conditionnaturalv")$p, nsmall = 3)`), relative to the atypical variation condition, on overall accuracy. Toddlers' proportion looking to target also increased significantly with age, as hypothesized (*OR* = `r filter(m.age.summary, term == "age_c")$or`, *SE* = `r format(filter(m.age.summary, term == "age_c")$se, nsmall = 2)`, *p* = `r format(filter(m.age.summary, term == "age_c")$p, nsmall = 3)`).
+
+Exploratory analyses examining children's performance across the two post-labeling windows revealed, descriptively, that window effects emerged primarily in the first window, which is the typical window of analysis used in LWL studies to examine word recognition [@fernald2008looking]. In the second post-labeling window, which is less frequently implemented in LWL studies, children's performance was reliably above chance in all conditions (all *p*s < 0.05), indicating some evidence of learning across varying types of exposure (see Supplemental Materials for further details).
 
 [^2]: Following our pre-registered analysis plan, we tested whether including an interaction between condition and age improved model fit---we compared the model with the interaction term to the simpler additive model using a likelihood ratio test. This analysis suggested no reliable difference in predictive accuracy, indicating that the interaction term did not improve model fit ($\chi^2$(`r m.age.comp$df`) = `r round(m.age.comp$statistic, 2)`, *p* = `r round(m.age.comp$p.value, 3)`).
 
@@ -589,14 +575,15 @@ sync_data <- read_csv("data/synchrony/combined/pupil-synchrony-exp23_sentence.cs
   ungroup() %>%
   mutate(sync_z=datawizard::standardize(mean_synchrony))
 
-#acc_data <- read_csv("data/test-props-bywindow.csv") %>%
-  #filter(window == "first") %>%
 acc_data <- read_csv("data/test-props.csv") %>%
+  mutate(id = str_remove(pid, "LVar")) %>%
+  left_join(ages, by = "id") %>%
   transmute(pid=pid,
             word=base_word, 
             condition=condition, 
-            prop=prop) %>%
-  group_by(pid, word, condition) %>%
+            prop=prop, 
+            age_c = age_c) %>%
+  group_by(pid, age_c, word, condition) %>%
   summarize(mean_accuracy=mean(prop)) %>%
   ungroup() %>%
   mutate(acc_z=datawizard::standardize(mean_accuracy))
@@ -608,7 +595,8 @@ combined_data <- left_join(acc_data, sync_data,
   mutate(condition=factor(condition, 
                             levels=c("unnaturalv", "stable", "naturalv"))) 
 
-sync_model <- lmer(sync_z ~ condition + (1|pid), data=combined_data)
+sync_model <- lmer(sync_z ~ condition + (1|pid), 
+                   data=combined_data)
 
 # remove outliers and refit
 outliers <- performance::check_outliers(sync_model)
@@ -621,11 +609,15 @@ anova_result <- anova(sync_model)
 
 # pairwise comparions
 emm_sync <- emmeans(sync_model, pairwise ~ condition)
-pairs_sync <- emm_sync$contrasts %>% as.data.frame()
-pairwise_es <- eff_size(emm_sync, sigma=sigma(sync_model), edf=df.residual(sync_model)) %>% as.data.frame()
+
+pairs_sync <- emm_sync$contrasts %>% 
+  as_tibble()
+
+pairwise_es <- eff_size(emm_sync, sigma=sigma(sync_model), 
+                        edf=df.residual(sync_model)) %>% 
+  as_tibble()
 
 model.data <- test.props.bywindow %>%
-  filter(window == "first") %>%
   mutate(id=str_extract(pid, "[0-9][0-9][0-9]")) %>%
   left_join(ages, by="id") %>%
   mutate(pid=paste0("LVar", id), 
@@ -637,50 +629,24 @@ model.data <- test.props.bywindow %>%
                                      "naturalv"))) %>%
   filter(!is.na(sync_z))
 
-if (rerun) {
-  m.sync <- brm(
-    bf(prop ~ age_c + condition * sync_z + (1 + condition | id) + (1 + condition + age_c | base_word),
-     phi ~ condition + age_c,
-     zoi ~ condition + age_c,
-     coi ~ condition + age_c),
-  data=model.data,
-  family=zero_one_inflated_beta(),
-  chains=4,
-  cores=4,
-  save_pars=save_pars(all=TRUE),
-  iter=2000,
-  warmup=1000,
-  seed=20250803,
-  control=list(adapt_delta=0.999)
-  )
-  saveRDS(m.sync, file="models/m-sync-sentence.rds")
-  
-  # refit m.age with shared sync data
-  common_data <- m.sync$data
-  m.age.refit <- update(m.age, newdata=common_data, recompile=FALSE)
-  saveRDS(m.sync, file="models/m-age-refit-sentence.rds")
-  loo1 <- loo(m.age.refit, moment_match=TRUE, reloo=TRUE, k_threshold=0.7)
-  loo2 <- loo(m.sync, moment_match=TRUE, reloo=TRUE, k_threshold=0.7)
-  comp <- loo_compare(loo1, loo2) %>%
-    as_tibble() %>%
-    rownames_to_column(var="model")
-  write_csv(comp, "models/compare-sync-sentence.csv")
-} else {
-  m.sync <- readRDS("models/m-sync-sentence.rds")
-  m.age.refit <- readRDS("models/m-age-refit-sentence.rds")
-  comp <- read_csv("models/compare-sync-sentence.csv")
-}
+m.age.refit <- glmer(prop ~ condition + age_c + (1 | id), 
+                family = binomial, 
+                data = model.data)
 
-m.sync_summary <- as_draws_df(m.sync) %>%
-    pivot_longer(cols=starts_with("b_"), 
-                 names_to="parameter", 
-                 values_to="value") %>%
-  group_by(parameter) %>%
-  mean_qi(.width=0.89) %>%
-  select(parameter, starts_with("value"))
+
+m.sync <- glmer(prop ~ condition * sync_z + age_c + (1 | id), 
+                family = binomial, 
+                data = model.data)
+
+m.sync_summary <- m.sync %>%
+  tidy()
+
+comp <- anova(m.age.refit, m.sync) %>%
+  tidy() %>%
+  filter(term == "m.sync")
 ```
 
-We examined synchrony during the two types of critical exposure sentences that differed between conditions. A linear mixed-effects model [@lme4] predicting average pupil size synchrony (z-scored) from condition, with a by-participant random intercept, revealed a significant main effect of condition on pupil size synchrony \[*F*(2, `r round(anova_result$DenDF, 0)`)=`r format(round(anova_result$"F value"[1], 2), nsmall=2)`, *p*`r ifelse(anova_result$"Pr(>F)"[1] < .001, "<0.001", paste0("=", round(anova_result$"Pr(>F)"[1], 3)))`\]. Follow-up pairwise comparisons using Tukey's HSD correction indicated that there were statistically significant differences between all condition pairs. Pupil size synchrony was higher in the atypical variation condition (ΔM=`r format(round(pairs_sync$estimate[1], 2), nsmall=2)`, *p*`r ifelse(pairs_sync$p.value[1] < 0.001, "<0.001", paste0("=", round(pairs_sync$p.value[1], 3)))`, Cohen's *d*=`r round(pairwise_es$effect.size[1], 2)`) and the typical variation condition (ΔM=`r round(-pairs_sync$estimate[3], 2)`, *p*`r ifelse(pairs_sync$p.value[3] < 0.001, "<0.001", paste0("=", round(pairs_sync$p.value[3], 3)))`, Cohen's *d*=`r round(-pairwise_es$effect.size[3], 2)`), relative to the consistent condition. Pupil size synchrony was also higher in the typical variation condition relative to the atypical variation condition (ΔM=`r round(-pairs_sync$estimate[2], 2)`, *p*`r ifelse(pairs_sync$p.value[2] < 0.001, "<0.001", paste0("=", round(pairs_sync$p.value[2], 3)))`, Cohen's *d*=`r round(-pairwise_es$effect.size[2], 2)`).
+We examined synchrony during the two types of critical exposure sentences that differed between conditions. A linear mixed-effects model [@lme4] predicting average pupil size synchrony (*z*-scored) from condition, with a by-participant random intercept, revealed a significant main effect of condition on pupil size synchrony \[*F*(2, `r round(anova_result$DenDF, 0)`)=`r format(round(anova_result$"F value"[1], 2), nsmall=2)`, *p*`r ifelse(anova_result$"Pr(>F)"[1] < .001, "<0.001", paste0("=", round(anova_result$"Pr(>F)"[1], 3)))`\]. Follow-up pairwise comparisons using Tukey's HSD correction indicated that there were statistically significant differences between all condition pairs. Pupil size synchrony was higher in the atypical variation condition (ΔM=`r format(round(pairs_sync$estimate[1], 2), nsmall=2)`, *p*`r ifelse(pairs_sync$p.value[1] < 0.001, "<0.001", paste0("=", round(pairs_sync$p.value[1], 3)))`, Cohen's *d*=`r round(pairwise_es$effect.size[1], 2)`) and the typical variation condition (ΔM=`r round(-pairs_sync$estimate[3], 2)`, *p*`r ifelse(pairs_sync$p.value[3] < 0.001, "<0.001", paste0("=", round(pairs_sync$p.value[3], 3)))`, Cohen's *d*=`r round(-pairwise_es$effect.size[3], 2)`) relative to the consistent condition. Pupil size synchrony was also higher in the typical variation condition relative to the atypical variation condition (ΔM=`r round(-pairs_sync$estimate[2], 2)`, *p*`r ifelse(pairs_sync$p.value[2] < 0.001, "<0.001", paste0("=", round(pairs_sync$p.value[2], 3)))`, Cohen's *d*=`r round(-pairwise_es$effect.size[2], 2)`).
 
 ```{r fig:pupil, fig.cap="Figure 2. Model-predicted pupil size synchrony (z-scored) across conditions with 95\\% confidence intervals. Jittered points represent participant means.", fig.width=8, fig.height=5}
 levels <- c("unnaturalv", "stable", "naturalv")
@@ -736,16 +702,12 @@ ggsave("Figure2.png", fig2, width=6, height=4, dpi=300)
 knitr::include_graphics("Figure2.png")
 ```
 
-To understand if toddlers' moment-to-moment engagement with consistent versus variable labels predicts their novel word learning, we tested whether or not a given participant's proportion looking to a target object during test trials could be reliably predicted from their average pupil size synchrony for that target word during training trials.
-
-We added mean pupil size synchrony (z-scored) as an additional fixed effect, along with a condition-by-synchrony interaction term, to our main zero-one inflated beta regression model. Model comparison using leave-one-out cross-validation [@loo] revealed a small improvement in predictive accuracy for the model including pupil size synchrony compared to a model with age and condition only (ΔELPD=`r round(comp$elpd_diff[2], 2)`, *SE*=`r round(comp$se_diff[2], 2)`), but the two models were nearly equivalent in overall fit.
-
-Results revealed no overall main effect of pupil size synchrony on participants' word-recognition accuracy (*b*=`r round(filter(m.sync_summary, parameter == "b_sync_z")$value, 2)`, 89% CrI \[`r round(filter(m.sync_summary, parameter == "b_sync_z")$value.lower, 2)`, `r round(filter(m.sync_summary, parameter == "b_sync_z")$value.upper, 2)`\]). The interaction between condition and synchrony was not statistically reliable (i.e., all 89% credible intervals included zero), but the direction of the effect in the typical variation condition suggested a possible trend toward increased word-recognition accuracy for participants with higher synchrony during critical exposure sentences (*b*=`r round(filter(m.sync_summary, parameter == "b_conditionnaturalv:sync_z")$value, 2)`, 89% CrI \[`r round(filter(m.sync_summary, parameter == "b_conditionnaturalv:sync_z")$value.lower, 2)`, `r round(filter(m.sync_summary, parameter == "b_conditionnaturalv:sync_z")$value.upper, 2)`\]).
+To understand if toddlers' moment-to-moment engagement with consistent versus variable labels predicts their novel word learning, we tested whether or not a given participant's proportion looking to a target object during test trials could be reliably predicted from their average pupil size synchrony for that target word during training trials. We added mean pupil size synchrony (*z*-scored) as an additional fixed effect, along with a condition-by-synchrony interaction term, to our main mixed-effects logistic regression model from Section 3.1; however, the addition of these terms did not significantly improve model fit ($\chi^2$(`r comp$df`) = `r round(comp$statistic, 2)`, *p* = `r round(comp$p.value, 3)`).
 
 # Discussion (711 words)
-We tested how consistent versus variable labels impact English-hearing toddlers' learning of novel-word object mappings. Specifically, we examined whether 18- to 36-month-olds showed better novel word-recognition accuracy when they were exposed to consistent labels versus typical label variants (reduplicated/diminutivized word forms attested in English CDS) versus atypical label variants (word forms unattested in English CDS). This is, to our knowledge, the first experiment to directly manipulate children's exposure to label variation during a word learning task. Building on prior naturalistic corpus analyses of CDS variant use [e.g., @casey2022doggy; @moore2024wordform; @ota2018choo], this study provides a next step toward understanding the *causal* impact of hearing multiple label variants on children's learning of new words.
+We tested how consistent versus variable labels impact English-hearing toddlers' learning of novel-word object mappings. Specifically, we examined whether 18- to 36-month-olds showed better novel word-recognition accuracy when they were exposed to consistent labels versus typical label variants (reduplicated/diminutivized word forms attested in English CDS) versus atypical label variants (word forms unattested in English CDS). This is, to our knowledge, the first experiment to directly manipulate children's exposure to label variation during a word learning task. Building on prior naturalistic corpus analyses of CDS variant use [e.g., @casey2022doggy; @moore2024wordform; @ota2018choo], this study provides a next step toward understanding the causal impact of hearing multiple label variants on children's learning of new words.
 
-As expected, children performed above chance in the consistent condition, replicating decades of findings that children can learn novel one-to-one mappings from a brief exposure phase. The primary goal of this study was to determine how children contend with two different types of label variation. In the atypical variation condition, word-recognition accuracy was weakest, with chance-level performance in the first critical window as hypothesized, and above-chance performance following the second label. In the typical variation condition, word-recognition accuracy was numerically highest. Although our models indicated some uncertainty around the magnitude of this advantage, this pattern suggests that toddlers were not only able to contend with but may have benefited from hearing familiar types of label variation.
+As hypothesized, children performed above chance in the consistent condition, replicating decades of findings that children can learn novel one-to-one mappings from a brief exposure phase. The primary goal of this study was to determine how children contend with two different types of label variation. In the atypical variation condition, word-recognition accuracy was weakest, with chance-level performance in the first critical window as hypothesized, and above-chance performance following the second label. In the typical variation condition, word-recognition accuracy was numerically highest. Although our models indicated some uncertainty around the magnitude of this advantage, this pattern suggests that toddlers were not only able to contend with but may have benefited from hearing familiar types of label variation.
 
 By the second instance of hearing the target label [cf. @ota2016reduplicated], children reliably recognized the novel word--object mappings in all conditions, suggesting that toddlers succeeded in learning words from both consistent and variable labels. It is important to acknowledge, however, that our current findings cannot fully tease apart different explanations for why children successfully learned from both types of input. It is possible that exposure to four repetitions of the standard word form was sufficient for children to learn label-object mappings, regardless of the surrounding variants. Children may have "filtered out" [cf. @potter2019infants] atypical or unfamiliar forms, focusing on the consistent standard repetitions. This explanation is plausible in the context of this short in-lab experiment but contrasts with naturalistic evidence that CDS variants are common in children's early productive vocabularies [e.g., @frank2021variability; @laing2019role; @tardif2008baby] and are used more often than standard adult word forms in the first years of life [@casey2022doggy]. Because it was not feasible to also evaluate children's recognition of typical and atypical variants (in addition to standard word forms) in the test phase given the length of the task, we cannot determine what children encoded about the specific label variants. Future work might further examine causal effects of exposure to label variants, such as improved long-term retention of word--object mappings [cf. @vlach2019learning] or better generalization to new label variants [cf. @regier2005emergence; @swingley2016two].
 

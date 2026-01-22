@@ -1,5 +1,5 @@
 ---
-title: "Supplemental Materials for: English-hearing toddlers learn words from consistent and variable labels"
+title: "Supplemental Materials for English-hearing toddlers learn words from consistent and variable labels"
 shorttitle: "SM: Learning from consistent and variable labels"
 author:
   - name: Kennedy Casey
@@ -19,7 +19,11 @@ author:
         address: "40 Woodlands Way, Princeton, NJ 08544"
 bibliography: LexVar-SM.bib
 format:
-  apaquarto-docx: default
+  apaquarto-docx:
+    number-sections: true
+    crossref:
+      fig-prefix: "Figure"
+      tbl-prefix: "Table"
   apaquarto-html: default
   apaquarto-pdf:
     documentmode: man
@@ -80,9 +84,7 @@ eyetrackingr.data <- read_csv("data/eyetrackingr-data.csv")
 rerun = FALSE
 ```
 
-# Results
-## Word recognition measured by gaze behavior
-
+# Re-analyzing LWL accuracy: Zero-one-inflated beta regression analyses
 ```{r test-bayes, results="hide"}
 model.data <- test.props %>%
   mutate(id=str_extract(pid, "[0-9][0-9][0-9]")) %>%
@@ -129,8 +131,6 @@ if (rerun) {
   )
   saveRDS(m.age.int, file="models/m-age-int.rds")
   
-  
-    
   m.window <- brm(
   bf(prop ~ condition * window + age_c + (1 + condition * window | id) + (1 + condition * window + age_c | base_word),
      phi ~ condition * window + age_c,
@@ -226,8 +226,6 @@ m.window2_summary <- as_draws_df(m.window2) %>%
   mean_qi(.width=0.89) %>%
   select(parameter, starts_with("value"))
 ```
-
-
 ```{r posterior-predictions}
 # generate posterior predictions per condition
 newdata <- data.frame(
@@ -274,14 +272,11 @@ pred_summary2 <- as.data.frame(preds_window2) %>%
 draws <- as_draws_df(m.age)
 summary <- summarize_draws(draws)
 ```
+Our primary analysis examined whether children successfully learned novel-word object mappings across conditions. Using the `brms` package [@brms], we fit mixed-effects zero-one-inflated beta regression models to examine the effects of condition and age on children's novel word-recognition accuracy (i.e., proportion looking to the target object). Beta regression was chosen to model the proportional dependent variable [@cribari2010beta]. Specifically, we used zero-one-inflated models since 0s and 1s were common values in our data [@liu2018review]. Note that this particular modeling approach requires a Bayesian framework to interpret. Importantly, this analytic approach allows us to quantify evidence in support of the null hypothesis, not simply against it. Models included fixed effects for condition (atypical variation vs. consistent vs. typical variation) and mean-centered age, along with the maximal random effects structure (by-participant and by-item random slopes and intercepts). Following our pre-registered analyses reported in the main text, we tested whether including an interaction between condition and age improved model fit---we compared the model with the interaction term to the simpler additive model using approximate leave-one-out cross-validation [LOO, @loo]. This analysis suggested no reliable difference in predictive accuracy, providing no strong evidence that the interaction term improved model fit (ΔELPD=`r format(round(filter(comp, model == 2)$elpd_diff, 2), nsmall=2)`, ΔSE=`r format(round(filter(comp, model == 2)$se_diff, 2), nsmall=2)`). We used weakly informative priors (standard normal distributions) and fitted the model using Hamiltonian Monte Carlo sampling (four chains, four cores) implemented in Stan [@rstan]. All $\hat{R}$ values were 1.00, indicating good convergence. Effective sample sizes (Bulk ESS: `r round(min(summary$ess_bulk, na.rm=TRUE), 0)`--`r format(round(max(summary$ess_bulk, na.rm=TRUE), 0), big.mark=",")`; Tail ESS: `r round(min(summary$ess_tail, na.rm=TRUE), 0)`--`r format(round(max(summary$ess_tail, na.rm=TRUE), 0), big.mark=",")`) were sufficiently large, indicating stable and reliable posterior estimates.
 
-Our primary analysis examined whether children successfully learned novel-word object mappings across conditions. Using the `brms` package [@brms], we fit mixed-effects zero-one inflated beta regression models[^2] to examine the effects of condition and age on children's novel word-recognition accuracy (i.e., proportion looking to the target object). Models included fixed effects for condition (atypical variation vs. consistent vs. typical variation) and mean-centered age[^3], along with the maximal random effects structure (by-participant and by-item random slopes and intercepts). We used weakly informative priors (standard normal distributions) and fitted the model using Hamiltonian Monte Carlo sampling (four chains, four cores) implemented in Stan [@rstan]. All $\hat{R}$ values were 1.00, indicating good convergence. Effective sample sizes (Bulk ESS: `r round(min(summary$ess_bulk, na.rm=TRUE), 0)`--`r format(round(max(summary$ess_bulk, na.rm=TRUE), 0), big.mark=",")`; Tail ESS: `r round(min(summary$ess_tail, na.rm=TRUE), 0)`--`r format(round(max(summary$ess_tail, na.rm=TRUE), 0), big.mark=",")`) were sufficiently large, indicating stable and reliable posterior estimates.
+Results revealed that children's performance was reliably above chance overall as well as in both critical windows across all conditions, except for the first critical window---the primary target of analysis in the vast majority of LWL studies [e.g., @fernald2008looking]---for the atypical variation condition, where children's looking behavior was at chance level (*M*=`r format(round(filter(pred_summary1, condition == "unnaturalv")$mean, 2))`, 89% CrI \[`r format(round(filter(pred_summary1, condition == "unnaturalv")$ci_lower, 2))`, `r format(round(filter(pred_summary1, condition == "unnaturalv")$ci_upper, 2), nsmall=2)`\]). This result replicates the key findings reported in the main text.
 
-[^2]: Beta regression was chosen to model the proportional dependent variable [@cribari2010beta]. Specifically, we used zero-one-inflated models since 0s and 1s were common values in our data [@liu2018review]. Note that this particular modeling approach requires a Bayesian framework to interpret. Importantly, this analytic approach allows us to quantify evidence in support of the null hypothesis, not simply against it. A frequentist beta regression using the `glmmTMB` package [@glmmTMB] roughly approximated the same trend, but this approach is limited in two key ways: (1) this model cannot accurately capture boundary values [see @liu2018review for relevant discussion], and (2) the model fails to converge with the maximal random effects structure, which forced us to remove the random slope for condition and thus reduced our ability to detect within-subject effects of condition.
-
-[^3]: Following our pre-registered analysis plan, we tested whether including an interaction between condition and age improved model fit---we compared the model with the interaction term to the simpler additive model using approximate leave-one-out cross-validation [LOO, @loo]. This analysis suggested no reliable difference in predictive accuracy, providing no strong evidence that the interaction term improved model fit (ΔELPD=`r format(round(filter(comp, model == 2)$elpd_diff, 2), nsmall=2)`, ΔSE=`r format(round(filter(comp, model == 2)$se_diff, 2), nsmall=2)`).
-
-Children's performance was reliably above chance overall as well as in both critical windows across all conditions, except for the first critical window---the primary target of analysis in the vast majority of LWL studies [e.g., @fernald2008looking]---for the atypical variation condition, where children's looking behavior was at chance level (*M*=`r format(round(filter(pred_summary1, condition == "unnaturalv")$mean, 2))`, 89% CrI \[`r format(round(filter(pred_summary1, condition == "unnaturalv")$ci_lower, 2))`, `r format(round(filter(pred_summary1, condition == "unnaturalv")$ci_upper, 2), nsmall=2)`\]). Across both critical windows, model-predicted accuracy was highest in the typical variation condition (*M*=`r format(round(filter(pred_summary, condition == "naturalv")$mean, 2))`, 89% CrI \[`r format(round(filter(pred_summary, condition == "naturalv")$ci_lower, 2))`, `r format(round(filter(pred_summary, condition == "naturalv")$ci_upper, 2))`\]), followed by the consistent condition (*M*=`r format(round(filter(pred_summary, condition == "stable")$mean, 2))`, 89% CrI \[`r format(round(filter(pred_summary, condition == "stable")$ci_lower, 2))`, `r format(round(filter(pred_summary, condition == "stable")$ci_upper, 2))`\]), and lowest in the atypical variation condition (*M*=`r format(round(filter(pred_summary, condition == "unnaturalv")$mean, 2))`, 89% CrI \[`r format(round(filter(pred_summary, condition == "unnaturalv")$ci_lower, 2))`, `r format(round(filter(pred_summary, condition == "unnaturalv")$ci_upper, 2))`\]). **Figure 1** shows model-predicted accuracy across conditions for the two critical windows. **Table 2** shows all model parameter estimates for fixed effects, and below, we break down the key results that are of theoretical interest.
+Across both critical windows, model-predicted accuracy was highest in the typical variation condition (*M*=`r format(round(filter(pred_summary, condition == "naturalv")$mean, 2))`, 89% CrI \[`r format(round(filter(pred_summary, condition == "naturalv")$ci_lower, 2))`, `r format(round(filter(pred_summary, condition == "naturalv")$ci_upper, 2))`\]), followed by the consistent condition (*M*=`r format(round(filter(pred_summary, condition == "stable")$mean, 2))`, 89% CrI \[`r format(round(filter(pred_summary, condition == "stable")$ci_lower, 2))`, `r format(round(filter(pred_summary, condition == "stable")$ci_upper, 2))`\]), and lowest in the atypical variation condition (*M*=`r format(round(filter(pred_summary, condition == "unnaturalv")$mean, 2))`, 89% CrI \[`r format(round(filter(pred_summary, condition == "unnaturalv")$ci_lower, 2))`, `r format(round(filter(pred_summary, condition == "unnaturalv")$ci_upper, 2))`\]). The relative order of performance across conditions varies compared to the results reported in the main text because `brms` allows for model convergence with the maximal random effects structure. **Figure 1** shows model-predicted accuracy across conditions for the two critical windows. **Table 2** shows all model parameter estimates for fixed effects, and below, we break down the key results that are of theoretical interest.
 
 ```{r fig, fig.cap="Figure 1. Posterior predicted accuracy by condition across both post-labeling time windows. Point ranges reflect posterior means with 89% credible intervals. Jittered dots show raw means for individual participants. Dotted line at 0.5 indicates chance looking.", fig.width=8, fig.height=5}
 
@@ -366,21 +361,12 @@ apa_table(
   note="The overall model includes both post-labeling windows (averaged accuracy) and the window-specific models include proportion estimates for 300--2,000ms following each target word onset. The μ component models the predicted accuracy (i.e., proportion looking to the target object) for non-boundary values (values between but not including 0 or 1). The zoi (zero-one inflation) component models the likelihood of accuracy being a boundary value---floor (0) or ceiling (1). The coi (conditional-one inflation) component models the probability of ceiling responses (1s) among boundary values."
 )
 ```
-
 ```{r test-bayes-reporting}
 library(tidybayes)
 library(posterior)
 draws <- as_draws_df(m.age)
 summary <- summarize_draws(draws)
 ```
-
-We fit a Bayesian zero-one inflated beta regression model [@liu2018review] to examine the effects of input condition and age on children's accuracy of novel word recognition (i.e., proportion looking to the target object), using the `brms` package [@brms]. The model included fixed effects for condition (atypical variation vs. typical variation vs. consistent) and mean-centered age, along with the maximal random effects structure (by-participant and by-item random slopes and intercepts). All R-hat values were 1.00, indicating good convergence. Effective sample sizes (Bulk ESS: `r round(min(summary$ess_bulk, na.rm = TRUE), 0)`--`r round(max(summary$ess_bulk, na.rm = TRUE), 0)`; Tail ESS: `r round(min(summary$ess_tail, na.rm = TRUE), 0)`--`r round(max(summary$ess_tail, na.rm = TRUE), 0)`) were sufficiently large, indicating stable and reliable posterior estimates.
-
-Following our pre-registered analysis plan, we tested whether including an interaction between condition and age improved model fit---we compared the model with the interaction term to the simpler additive model using approximate leave-one-out cross-validation [@loo]. This analysis suggested no reliable difference in predictive accuracy, providing no strong evidence that the interaction term improved model fit (ΔELPD = `r format(round(filter(comp, model == 2)$elpd_diff, 2), nsmall = 2)`, ΔSE = `r format(round(filter(comp, model == 2)$se_diff, 2), nsmall = 2)`).
-
-The beta component of the model, which estimates the effects on the mean outcome for non-boundary outcomes (i.e., values between but not including 0 or 1) showed small positive effects for both the natural variation condition (β = `r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall = 2)`, 89% CrI: [`r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall = 2)`]) and the consistent condition (β = `r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value, 2), nsmall = 2)`, 89% CrI: [`r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall = 2)`]), relative to the unnatural variation condition. Given that the credible intervals include zero, the results do not provide strong evidence for a condition effect. The effect of centered age was negligible (β = `r format(round(filter(m.age_summary, parameter == "b_age_c")$value, 2), nsmall = 2)`, 89% CrI: [`r format(round(filter(m.age_summary, parameter == "b_age_c")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_age_c")$value.upper, 2), nsmall = 2)`])
-
-The conditional one-inflation (coi) component, which predicts---among zero/one responses---the probability of being 1 (vs. 0), also showed similar trends for condition. The effect of the typical variation condition relative to atypical variation was weakly positive, and the credible intervals include zero (β = `r format(round(filter(m.age_summary, parameter == "b_coi_conditionnaturalv")$value, 2), nsmall = 2)`, 89% CrI: [`r format(round(filter(m.age_summary, parameter == "b_coi_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_coi_conditionnaturalv")$value.upper, 2), nsmall = 2)`]). The effect of the stable condition relative to the atypical variation condition was stronger but still uncertain given the credible interval overlap with zero. (β = `r format(round(filter(m.age_summary, parameter == "b_coi_conditionstable")$value, 2), nsmall = 2)`, 89% CrI: [`r format(round(filter(m.age_summary, parameter == "b_coi_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_coi_conditionstable")$value.upper, 2), nsmall = 2)`]). The effect of age was clearly positive (β = `r format(round(filter(m.age_summary, parameter == "b_coi_age_c")$value, 2), nsmall = 2)`, 89% CrI: [`r format(round(filter(m.age_summary, parameter == "b_coi_age_c")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.age_summary, parameter == "b_coi_age_c")$value.upper, 2), nsmall = 2)`]), indicating that older children were more likely to perform at ceiling (i.e., demonstrate 100% looking to the target object during the critical analysis window).
 
 ```{r extract-summary, echo=FALSE, execute = FALSE}
 library(brms)
@@ -412,226 +398,94 @@ prob_natv <- mean(draws$b_conditionnaturalv > 0)
 prob_stable <- mean(draws$b_conditionstable > 0)
 prob_age <- mean(draws$b_age_c > 0)
 ```
-
-Condition effects were weakly positive but uncertain. For the typical variation condition, the estimated effect was `r round(natv_est, 3)`, SD = `r round(natv_sd, 3)`, with a 89% credible interval from `r round(natv_lb, 3)` to `r round(natv_ub, 3)`. For the consistent condition, the estimate was `r round(stable_est, 3)`, SD = `r round(stable_sd, 3)`, 89% CI [`r round(stable_lb, 3)`, r `round(stable_ub, 3)`]. The effect of age was small (`r round(age_est, 3)`, SD = `r round(age_sd, 3)`), 89% CI [`r round(age_lb, 3)`, `r round(age_ub, 3)`].
+Condition effects were weakly positive but uncertain. For the typical variation condition, the estimated effect was `r round(natv_est, 3)`, SD = `r round(natv_sd, 3)`, with a 89% credible interval from `r round(natv_lb, 3)` to `r round(natv_ub, 3)`. For the consistent condition, the estimate was `r round(stable_est, 3)`, SD = `r round(stable_sd, 3)`, 89% CI [`r round(stable_lb, 3)`, `r `round(stable_ub, 3)`]. The effect of age was small (`r round(age_est, 3)`, SD = `r round(age_sd, 3)`), 89% CI [`r round(age_lb, 3)`, `r round(age_ub, 3)`].
 
 Posterior probabilities that each effect was greater than zero were: `r round(prob_natv, 2)` for the effect of the typical variation condition (relative to atypical variation condition), `r round(prob_stable, 2)` for the effect of the consistent condition (relative to the atypical variation condition), and `r round(prob_age, 2)` for the effect of age. These results suggest limited evidence that either input condition or age significantly affected performance, though the posterior distributions for all three predictors leaned slightly positive.
 
-```{r fig1}
-#| label: fig1
-#| fig-cap: "Figure 1: Timecourse of participants' looks during test trials with shaded standard error regions. The gray dashed line at 0.5 represents chance looking. The black dashed lines indicate the critical analysis window (300-2000ms) following target word onset."
-#| width: 12
-#| height: 4
+# LWL window effects
+## Zero-one-inflated beta regression analyses
+We fit separate models for each post-labeling window. In the early time window (following the first label), there were no strong condition effects. The posterior estimate for the typical variation condition relative to atypical variation was β = `r format(round(filter(m.window1_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window1_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window1_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall = 2)`\]). Similarly, the consistent condition estimate was β = `r format(round(filter(m.window1_summary, parameter == "b_conditionstable")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window1_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window1_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall = 2)`\]). These effects were small, and their credible intervals included zero.
 
-eyetrackingr.data %>% 
-  mutate(accuracy = ifelse(fix == "target", 1, 0)) %>%
-  filter(time >= -1500 & time <= 2500) %>%
-  group_by(pid, time, condition, trial) %>%
-  summarize(accuracy = mean(accuracy, na.rm = TRUE)) %>% 
-  group_by(time, condition) %>% # aggregate across participants
-  summarize(
-    N = sum(!is.na(accuracy)),
-    SD = sd(accuracy, na.rm = TRUE),
-    SE = SD/sqrt(N),
-    accuracy = mean(accuracy, na.rm = TRUE),
-    lower = accuracy-SE,
-    upper = accuracy+SE
-  ) %>%
-  ggplot(aes(x=time, y=accuracy, color = condition)) + 
-  scale_fill_manual(values = condition.colors, labels = c("Typical variation", "Consistent", "Atypical variation")) +
-  scale_color_manual(values = condition.colors, labels = c("Typical variation", "Consistent", "Atypical variation")) +
-  geom_hline(aes(yintercept=0.5),linetype="dashed",color='gray') + 
-  geom_smooth(aes(ymin=lower, ymax=upper, fill = condition), stat="identity") +
-  geom_vline(xintercept = 300, linetype = "dashed", color = "black") +
-  geom_vline(xintercept = 2000, linetype = "dashed", color = "black") +
-  geom_line() +
-  theme_test(base_size=15) +
-  coord_cartesian(xlim=c(-500,2500), ylim= c(-.01,1.01),expand=F) +
-  scale_x_continuous(breaks=seq(from=-500,to=2500,by=200)) +
-  labs(x="Time from target word onset onset (ms)",
-       y="Accuracy\n(Proportion looking to target object)", 
-       color = "Condition", 
-       fill = "Condition") +
-  theme(axis.title = element_text(face = "bold"), 
-        legend.title = element_text(face = "bold"), 
-        legend.position = "bottom",
-        axis.text.x = element_text(size = 8))
+In the later window (following the second label), condition effects were descriptively stronger. The estimate for the typical variation condition relative to atypical variation was β = `r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall = 2)`\]), and for the consistent condition: β = `r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall = 2)`\]). Though credible intervals still overlapped zero, the magnitude and direction of the effects in this window were more consistent with our hypotheses.
+
+## Linear mixed-effects regression analyses
+```{r glmer-window}
+# prep data
+test.props <- read_csv("data/test-props.csv")
+test.props.bywindow <- read_csv("data/test-props-bywindow.csv")
+
+model.data <- test.props %>%
+  mutate(id=str_extract(pid, "[0-9][0-9][0-9]")) %>%
+  left_join(ages, by="id") %>%
+  mutate(condition=relevel(as.factor(condition), ref="unnaturalv"))
+
+model.data.bywindow <- test.props.bywindow %>%
+  mutate(id=str_extract(pid, "[0-9][0-9][0-9]")) %>%
+  left_join(ages, by="id") %>%
+  mutate(condition=relevel(as.factor(condition), ref="unnaturalv"))
+
+
+# explore window effects 
+## simplify models to deal with non-convergence
+m.window <- glmer(prop ~ condition + window + age_c + (1 | id), 
+               data = model.data.bywindow, 
+               family = binomial)
+
+m.window.int <- glmer(prop ~ condition * window + age_c + (1 | id), 
+               data = model.data.bywindow, 
+               family = binomial)
+
+m.window.comp <- anova(m.window, m.window.int) %>%
+  tidy() %>%
+  filter(term == "m.window.int")
+
+pred.window <- emmeans(m.window, ~ condition, 
+                    at = list(age_c = 0), type = "response") %>%
+  as_tibble()
+
+m.window.summary <- m.window %>%
+  tidy() %>%
+  filter(effect == "fixed", term != "(Intercept)") %>%
+  mutate(or = round(estimate, 2), 
+         se = round(std.error, 2), 
+         p = round(p.value, 3))
+
+m.window1 <- glmer(prop ~ condition + age_c + (1 | id), 
+                   data = filter(model.data.bywindow, window == "first"), 
+                   family = binomial)
+
+pred.window1 <- emmeans(m.window1, ~ condition, 
+                    at = list(age_c = 0), type = "response") %>%
+  as_tibble()
+
+m.window1.summary <- m.window1 %>%
+  tidy() %>%
+  filter(effect == "fixed", term != "(Intercept)") %>%
+  mutate(or = round(estimate, 2), 
+         se = round(std.error, 2), 
+         p = round(p.value, 3))
+
+m.window2 <- glm(prop ~ condition + age_c, 
+                   data = filter(model.data.bywindow, window == "second"), 
+                   family = binomial)
+
+pred.window2 <- emmeans(m.window2, ~ condition, 
+                    at = list(age_c = 0), type = "response") %>%
+  as_tibble()
+
+m.window2.summary <- m.window2 %>%
+  tidy() %>%
+  filter(term != "(Intercept)") %>%
+  mutate(or = round(estimate, 2), 
+         se = round(std.error, 2), 
+         p = round(p.value, 3))
 ```
 
-### Window effects
+In the main text, we reported effects from linear mixed-effects models [@lme4] predicting the average proportion of target looking across the two post-labeling windows (following our pre-registration). Adding post-labeling window to the base model[^1] revealed no effect of window (*OR* = `r filter(m.window.summary, term == "windowsecond")$or`, *SE* = `r format(filter(m.window.summary, term == "windowsecond")$se, nsmall = 2)`, *p* = `r format(filter(m.window.summary, term == "windowsecond")$p, nsmall = 3)`). In addition, adding an interaction between window and condition did not significantly improve the model fit ($\chi^2$(`r m.window.comp$df`) = `r round(m.window.comp$statistic, 2)`, *p* = `r round(m.window.comp$p.value, 3)`).
 
-In the early time window, there were no strong condition effects. The posterior estimate for the typical variation condition relative to atypical variation was β = `r format(round(filter(m.window1_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window1_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window1_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall = 2)`\]). Similarly, the consistent condition estimate was β = `r format(round(filter(m.window1_summary, parameter == "b_conditionstable")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window1_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window1_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall = 2)`\]). These effects were small, and their credible intervals included zero.
-
-In the later window, condition effects were descriptively stronger. The estimate for the typical variation condition relative to atypical variation was β = `r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall = 2)`\]), and for the consistent condition: β = `r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall = 2)`\]). Though credible intervals still overlapped zero, the magnitude and direction of the effects in this window were more consistent with our hypotheses.
-
-
-
-```{r rt, results = "hide"}
-distracter.initial.trials <- eyetrackingr.data %>%
-  filter(time == 0,  fix == "distracter") %>%
-  distinct(pid, trial)
-
-rt.data <- eyetrackingr.data %>%
-  semi_join(distracter.initial.trials, by = c("pid", "trial")) %>%
-  filter(fix == "target" & time > 0) %>%
-  group_by(pid, condition, trial, base_word) %>%
-  summarize(rt = min(time)) %>%
-  ungroup() %>%
-  mutate(id = str_extract(pid, "[0-9][0-9][0-9]")) %>%
-  left_join(ages, by = "id") %>%
-  mutate(id = as.factor(id), 
-         condition = relevel(as.factor(condition), ref = "unnaturalv"), 
-         z_rt = scale(rt)) %>%
-  filter(abs(z_rt) < 3)
-
-if (rerun) {
-  m.rt <- brm(rt ~ condition + age_c + 
-               (1 + condition | id) + 
-               (1 + condition + age_c | base_word),
-             data = rt.data, 
-             family = gaussian(), 
-             control = list(adapt_delta = 0.99))
-  saveRDS(m.rt, file = "models/m-rt.rds")
-} else {
-  m.rt <- readRDS(file = "models/m-rt.rds")
-}
-
-library(bayestestR)
-
-# Posterior summary with 89% credible intervals
-posterior_summary(m.rt, prob = 0.89)
-
-# Posterior probabilities of being > 0
-p_direction(m.rt)
-
-fixef(m.rt, probs = c(0.055, 0.945))  # for 89% CI
-```
-Our primary analysis examines whether children successfully learned the novel word-object mappings in our experiment and compares performance across three different exposure conditions. We used mixed-effects zero-one-inflated beta regression to model the effects of condition (atypical variation vs. consistent vs. typical variation) on accuracy (proportion looking to the target object relative to the total time looking at either the target or distractor object) during the critical analysis window (300-2000ms following target word onset). Age (scaled) was included as an additional fixed effect. We also included the maximal random effects structure (by-child and by-item intercepts and slopes). Beta regression was chosen to model the proportional dependent variable [CITE]. We used a zero-one-inflated model since 0s and 1s are possible values in our data [CITE]. This particular modeling approach requires a Bayesian framework to interpret. 
-
-```{r cluster-permutation, message=FALSE, warning=FALSE, execute = FALSE}
-library(eyetrackingR)
-eyetrackingr.data <- eyetrackingr.data %>%
-  mutate(trackloss = NA, 
-         aoi = ifelse(target == 1, "target", "distracter"),
-         target = ifelse(target == 1, TRUE, FALSE),
-         distracter = ifelse(distracter, TRUE, FALSE)) %>% 
-  distinct() 
-
-# Step 1: Prepare the eyetrackingR data object
-et_data <- eyetrackingr.data %>%
-  group_by(pid, trial, time) %>%
-  filter(n() == 1) %>%
-  make_eyetrackingr_data(., 
-                         participant_column = "pid",
-                         trial_column = "trial",
-                         time_column = "time",
-                         trackloss_column = "trackloss",
-                         aoi_columns = c("target", "distracter"),
-                         treat_non_aoi_looks_as_missing = TRUE)
-
-max.time <- data %>%
-  summarize(max = mean(second_label) - mean(first_label) + 2000) %>%
-  pull(max)
-
-response_window <- subset_by_window(et_data,
-                                     window_start_time = min(first.window),
-                                     window_end_time = max(second.window), 
-                                     rezero = FALSE)
-
-response_window2 <- subset_by_window(et_data,
-                                     window_start_time = min(second.window),
-                                     window_end_time = max(second.window), 
-                                     rezero = FALSE)
-
-response_window1 <- subset_by_window(et_data,
-                                     window_start_time = 300,
-                                     window_end_time = 2000, 
-                                     rezero = FALSE)
-
-response_window_agg_by_sub <- make_time_window_data(response_window1, 
-                                                    aois='target',
-                                              predictor_columns=c('condition'),
-                                                    summarize_by = "pid") %>%
-  mutate(condition = factor(condition, levels = c("unnaturalv", "naturalv", "stable")), 
-         id = str_extract(pid, "[0-9][0-9][0-9]")) %>%
-  left_join(ages, by = "id")
-
-
-plot(response_window_agg_by_sub, predictor_columns="condition", dv = "Prop")
-
-library(lme4)
-library(lmerTest)  # for p-values
-
-m <- lmer(Prop ~ condition + age_c + (1 | pid), data = response_window_agg_by_sub)
-summary(m)
-
-ggplot(response_window_agg_by_sub, aes(x=condition, y = Prop, color = condition)) +
-  stat_summary(fun.data = mean_se, geom="pointrange")+
-  coord_cartesian(ylim = c(0, 1))+
-  labs(y = "Prop. of Target Looks")+
-  geom_hline(yintercept = .5, color = "black")+
-  scale_color_manual(values = condition.colors) + 
-  theme_bw() +
-  theme(legend.position = "bottom",
-        legend.title = element_blank(),
-        axis.text.x = element_blank(),
-        axis.title.x = element_blank(),
-        axis.ticks.x = element_blank())
-
-response_time <- make_time_sequence_data(response_window1,
-                                         time_bin_size = 10, 
-                                         predictor_columns = c("condition"),
-                                         aois = "target",
-                                         summarize_by = "pid")
-
-response_time <- response_time %>%
-  mutate(condition = factor(condition, levels = c("unnaturalv", "stable", "naturalv")))
-
-ggplot(response_time, aes(x = Time, y = Prop))+
-  geom_ribbon(aes(xmin = 300, xmax = 2000),
-  color = NA, fill = "#9982E1", alpha = 0.1) +
-  geom_ribbon(aes(xmin = min(second.window), xmax = max(second.window)),
-  color = NA, fill = "#9982E1", alpha = 0.1) +
-  stat_smooth(method="loess", span=0.1, se=TRUE, alpha=0.3,
-  color = "black", fill = "black") +
-  labs(x = "Time from first target label onset (ms)", 
-       y = "Accuracy\n(Proportion looking to target object)")+
-  geom_hline(yintercept = 0.5, color = "black", linetype="dashed")+
-  geom_vline(xintercept = 0, color = "#9982E1", size = 2) +
-  geom_vline(xintercept = max.time-2000, color = "#9982E1", size = 2) + 
-  scale_x_continuous(limits = c(-2500, 5000), breaks = c(-2500, 0, 2500, 5000)) + 
-  coord_cartesian(ylim = c(0,1))+
-  theme_classic(base_size = 20) + 
-  theme(legend.position = "bottom",
-        legend.title = element_blank())
-
-response_time %>%
-  ggplot(aes(x = Time, y = Prop, color = condition)) +
-  geom_ribbon(aes(xmin = 300, xmax = 2000), color = NA, fill = "gray", alpha = 0.25) + 
-  geom_ribbon(aes(xmin = min(second.window), xmax = max(second.window)), 
-             color = NA, fill = "gray", alpha = 0.25) + 
-  stat_smooth(method="loess", span=0.1, se=TRUE, aes(fill=condition), alpha=0.3) +
-  labs(x = "Time from first target label onset (ms)", 
-       y = "Accuracy\n(Proportion looking to target object)")+
-  geom_hline(yintercept = .5, color = "black", linetype="dashed")+
-  geom_vline(xintercept = 0, color = "black")+
-  geom_vline(xintercept = max.time-2000, color = "black") + 
-  scale_color_manual(values = condition.colors) + 
-  scale_fill_manual(values = condition.colors) + 
-  coord_cartesian(ylim = c(0,1))+
-  theme_classic(base_size = 20) + 
-  theme(legend.position = "bottom",
-        legend.title = element_blank())
-
-df_timeclust <- make_time_cluster_data(filter(response_time, condition %in% c("unnaturalv", "stable")), 
-                                       test= "t.test", paired = TRUE,
-                                       predictor_column = "condition", 
-                                       threshold = 2)
-
-plot(df_timeclust) +  ylab("T-Statistic") + theme_light() + 
-  ggtitle("Both windows: Stable vs. Unnatural variation")
-```
-
+[^1]: glmer(prop. target looking ~ condition + window + age + (1 | id), family = binomial)
+  
+## Cluster-based permutation analyses
 ```{r cluster-based-permutation, execute = FALSE}
 rerun.cbp = FALSE
 
@@ -746,14 +600,106 @@ p_obs <- mean(perm_cluster_aucs > max_cluster_obs$auc)
   p_obs <- 0.997
 }
 ```
-<!---A cluster-based permutation test identified a marginal cluster from `max_cluster_obs$start` to `max_cluster_obs$stop`ms (AUC = `r max_cluster_obs$auc`), but this cluster did not reach significance compared to the permutation-based null distribution (p = `p_obs`), suggesting at most a weak and transient effect of condition.--->
 
-## Moment-by-moment attention measured by pupil size synchrony
-### Comparing pupil size synchrony across conditions
-Following @nencheva2021moment, we used dynamic time-warping distance [DTW; @tormene2009matching] to quantify the temporal alignment of participants' pupil responses when hearing individual exposure sentences or words (normalized for duration). This DTW measure quantifies the dissimilarity between two time series of pupil fluctuations. To transform these values into synchrony scores, we subtracted DTW distance scores from the maximum distance between two participants on each trial. To compare pupil size synchrony across conditions, we computed pairwise synchrony scores for all possible pairs of participants (for each exposure sentence or word per condition). 
+A cluster-based permutation test identified a marginal cluster from `r max_cluster_obs$start` to `r max_cluster_obs$stop`ms (AUC = `r max_cluster_obs$auc`), but this cluster did not reach significance compared to the permutation-based null distribution (p = `r p_obs`), suggesting at most a weak and transient effect of condition.
 
+```{r fig2}
+#| label: fig2
+#| fig-cap: "Figure 2: Timecourse of participants' looks during test trials with shaded standard error regions. The black dashed line at 0.5 represents chance looking. The gray shaded regions indicate the critical analysis windows (300-2000ms) following target word onset."
+
+library(eyetrackingR)
+eyetrackingr.data <- eyetrackingr.data %>%
+  mutate(trackloss = NA, 
+         aoi = ifelse(target == 1, "target", "distracter"),
+         target = ifelse(target == 1, TRUE, FALSE),
+         distracter = ifelse(distracter, TRUE, FALSE)) %>% 
+  distinct() 
+
+et_data <- eyetrackingr.data %>%
+  group_by(pid, trial, time) %>%
+  filter(n() == 1) %>%
+  make_eyetrackingr_data(., 
+                         participant_column = "pid",
+                         trial_column = "trial",
+                         time_column = "time",
+                         trackloss_column = "trackloss",
+                         aoi_columns = c("target", "distracter"),
+                         treat_non_aoi_looks_as_missing = TRUE)
+
+max.time <- data %>%
+  summarize(max = mean(second_label) - mean(first_label) + 2000) %>%
+  pull(max)
+
+response_window <- subset_by_window(et_data,
+                                     window_start_time = min(first.window),
+                                     window_end_time = max(second.window), 
+                                     rezero = FALSE)
+
+response_window2 <- subset_by_window(et_data,
+                                     window_start_time = min(second.window),
+                                     window_end_time = max(second.window), 
+                                     rezero = FALSE)
+
+response_window1 <- subset_by_window(et_data,
+                                     window_start_time = 300,
+                                     window_end_time = 2000, 
+                                     rezero = FALSE)
+
+response_window_agg_by_sub <- make_time_window_data(response_window1, 
+                                                    aois='target',
+                                              predictor_columns=c('condition'),
+                                                    summarize_by = "pid") %>%
+  mutate(condition = factor(condition, levels = c("unnaturalv", "naturalv", "stable")), 
+         id = str_extract(pid, "[0-9][0-9][0-9]")) %>%
+  left_join(ages, by = "id")
+
+response_time <- make_time_sequence_data(response_window,
+                                         time_bin_size = 10, 
+                                         predictor_columns = c("condition"),
+                                         aois = "target",
+                                         summarize_by = "pid")
+
+response_time <- response_time %>%
+  mutate(condition = factor(condition, levels = c("unnaturalv", "stable", "naturalv")))
+
+fig2 <- response_time %>%
+  ggplot(aes(x = Time, y = Prop, color = condition)) +
+  geom_ribbon(aes(xmin = 300, xmax = 2000), color = NA, fill = "gray", alpha = 0.25) + 
+  geom_ribbon(aes(xmin = min(second.window), xmax = max(second.window)), 
+             color = NA, fill = "gray", alpha = 0.25) + 
+  stat_smooth(method="loess", span=0.1, se=TRUE, aes(fill=condition), alpha=0.3) +
+  labs(x = "Time from first target label onset (ms)", 
+       y = "Proportion looking to target object")+
+  geom_hline(yintercept = .5, color = "black", linetype="dashed")+
+  geom_vline(xintercept = 0, color = "black")+
+  geom_vline(xintercept = max.time-2000, color = "black") + 
+  scale_color_manual(values = condition.colors, labels = c(
+      unnaturalv = "Atypical\nvariation",
+      naturalv   = "Typical\nvariation",
+      stable     = "Consistent"
+    )) + 
+  scale_fill_manual(values = condition.colors, labels = c(
+      unnaturalv = "Atypical\nvariation",
+      naturalv   = "Typical\nvariation",
+      stable     = "Consistent"
+    )) + 
+  coord_cartesian(ylim = c(0,1))+
+  theme_classic(base_size = 15) + 
+  theme(legend.position = "bottom",
+        legend.title = element_blank(), 
+        axis.title = element_text(face = "bold"))
+
+ggsave("FigureS2.png", fig2, width=8, height=5, dpi=300)
+knitr::include_graphics("FigureS2.png")
+```
+
+
+# Alternative pupillometry analyses
+Our main analyses compared toddlers' pupil size synchrony during the two types of exposure sentences that differed between conditions. 
+
+We include below effects taking into account all four types of exposure sentences
 ```{r pupillometry-sentence-level}
-sync_data <- read_csv("data/synchrony/combined/pupil-synchrony-exp23_sentence.csv") %>%
+sync_data <- read_csv("data/synchrony/combined/pupil-synchrony-all_sentence.csv") %>%
   group_by(participant, condition, word, exposure) %>%
   summarize(mean_synchrony = mean(synchrony, na.rm = TRUE), .groups = "drop") %>%
   mutate(pid = gsub("ex", "", participant)) %>%
@@ -780,8 +726,14 @@ combined_data <- left_join(acc_data, sync_data,
                             levels = c("unnaturalv", "stable", "naturalv"))) 
 
 sync_model <- lmer(sync_z ~ condition + (1|pid), data = combined_data)
-# confirmed no outliers!
-# outliers <- performance::check_outliers(sync_model)
+outliers <- performance::check_outliers(sync_model)
+
+combined_data$outlier <- outliers
+
+# refit model after removing outliers
+sync_model <- lmer(sync_z ~ condition + (1|pid), 
+                   data = filter(combined_data, !outlier))
+
 anova_result <- anova(sync_model)
 eta <- effectsize::eta_squared(sync_model, partial = TRUE)
 
@@ -845,30 +797,6 @@ model.data <- test.props %>%
          pid = paste0("LVar", id), 
          word = base_word) %>%
   left_join(sync_data, by = c("pid", "condition", "word"))
-
-if (rerun) {
-  m.sync <- brm(
-    bf(prop ~ condition + age_c + sync_z + (1 + condition | id) + (1 + condition + age_c | base_word),
-     phi ~ age_c,
-     zoi ~ age_c,
-     coi ~ condition + age_c),
-  data = model.data,
-  family = zero_one_inflated_beta(),
-  chains = 4,
-  cores = 4,
-  iter = 4000,
-  control = list(adapt_delta = 0.999)
-  )
-  saveRDS(m.sync, file = "models/m-sync.rds")
-  
-  # refit m.age with shared sync data
-  common_data <- m.sync$data
-  m.age.refit <- update(m.age, newdata = common_data, recompile = FALSE)
-  saveRDS(m.sync, file = "models/m-age-refit.rds")
-} else {
-  m.sync <- readRDS("models/m-sync.rds")
-  m.age.refit <- readRDS("models/m-age-refit.rds")
-}
 ```
 
 ```{r pupillometry-word-level}
@@ -917,41 +845,6 @@ model.data <- test.props.bywindow %>%
                                      "stable", 
                                      "naturalv"))) %>%
   filter(!is.na(sync_z))
-
-if (rerun) {
-  m.sync <- brm(
-    bf(prop ~ condition * sync_z + age_c + (1 + condition | id) + (1 + condition + age_c | base_word),
-     phi ~ condition + age_c,
-     zoi ~ condition + age_c,
-     coi ~ condition + age_c),
-  data = model.data,
-  family = zero_one_inflated_beta(),
-  chains = 4,
-  cores = 4,
-  save_pars = save_pars(all = TRUE),
-  iter = 2000,
-  warmup = 1000,
-  seed = 20250803,
-  control = list(adapt_delta = 0.999)
-  )
-  saveRDS(m.sync, file = "models/m-sync-word.rds")
-  
-  # refit m.age with shared sync data
-  common_data <- m.sync$data
-  m.age.refit <- update(m.age, newdata = common_data, recompile = FALSE)
-  saveRDS(m.sync, file = "models/m-age-refit-word.rds")
-
-  loo1 <- loo(m.age.refit, moment_match = TRUE, reloo = TRUE)
-  loo2 <- loo(m.sync)
-  comp <- loo_compare(loo1, loo2) %>%
-    as_tibble() %>%
-    rownames_to_column(var = "model")
-  write_csv(comp, "models/compare-sync-word.csv")
-} else {
-  m.sync <- readRDS("models/m-sync-word.rds")
-  m.age.refit <- readRDS("models/m-age-refit-word.rds")
-  comp <- read_csv("models/compare-sync-word.csv")
-}
  
 ggplot(combined_data, aes(x = condition, y = sync_z, fill = condition, color = condition)) +
   geom_jitter(width = 0.2, alpha = 0.4, size = 1.5) +
@@ -1002,7 +895,7 @@ ggplot(combined_data, aes(x = sync_z, y = mean_accuracy, color = condition, fill
     x = "Mean Pupil Synchrony",
     y = "Mean Accuracy (Proportion Target Looks)",
     title = "Model-Based Relationship Between Pupil Synchrony and Accuracy",
-    subtitle = "Predicted from zero-one inflated beta regression, faceted by condition"
+    subtitle = "Predicted from zero-one-inflated beta regression, faceted by condition"
   ) +
   theme_test() +
   theme(legend.position = "none")
