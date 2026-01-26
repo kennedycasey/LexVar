@@ -21,7 +21,7 @@ author:
 author-note:
   disclosures:
     study-registration: "The study design and analysis plan was pre-registered ([https://osf.io/uqz6d](https://osf.io/uqz6d))."
-    data-sharing: "Anonymized data and fully reproducible manuscript code are available at LINK."
+    data-sharing: "Anonymized data and fully reproducible manuscript code are available at [https://osf.io/xmkna](https://osf.io/xmkna)."
     conflict-of-interest: "The authors declare no conflicts of interest."
     financial-support: "This research was supported by the Eunice Kennedy Shriver National Institute of Child Health and Human Development (R01R01HD095912-05 awarded to CLW) and the National Science Foundation (Graduate Research Fellowship awarded to KC)."
     gratitude: "We are grateful to the participating families as well as the members of the Princeton Baby Lab and Psychology of Language Lab for their feedback on this work."
