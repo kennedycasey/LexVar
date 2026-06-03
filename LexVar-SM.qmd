@@ -230,6 +230,7 @@ m.window2_summary <- as_draws_df(m.window2) %>%
   mean_qi(.width=0.89) %>%
   select(parameter, starts_with("value"))
 ```
+
 ```{r posterior-predictions}
 # generate posterior predictions per condition
 newdata <- data.frame(
@@ -327,7 +328,7 @@ ggsave("FigureS1.png", fig1, width=8, height=5, dpi=300)
 knitr::include_graphics("FigureS1.png")
 ```
 
-The beta ($\mu$) component of the model, which estimates effects on the mean outcome for non-boundary values (i.e., proportions between but not including 0 or 1), showed positive effects for both the typical variation condition (*β*=`r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall=2)`\]) and the consistent condition (*β*=`r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall=2)`\]), relative to the atypical variation condition. Although the credible intervals include zero, the direction and magnitude of these effects suggest a possible learning advantage for both typical variation and consistency over atypical variation. The effect of mean-centered age was negligible (*β*=`r format(round(filter(m.age_summary, parameter == "b_age_c")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_age_c")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_age_c")$value.upper, 2), nsmall=2)`\]).
+The beta ($\mu$) component of the model, which estimates effects on the mean outcome for non-boundary values (i.e., proportions between but not including 0 or 1), showed weakly positive but uncertain effects for both the typical variation condition (*β*=`r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall=2)`\]) and the consistent condition (*β*=`r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall=2)`\]), relative to the atypical variation condition. Because both credible intervals include zero, these estimates should be interpreted cautiously. However, the direction and magnitude of these effects suggest a possible learning advantage for both typical variation and consistency over atypical variation. The effect of mean-centered age was negligible (*β*=`r format(round(filter(m.age_summary, parameter == "b_age_c")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_age_c")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_age_c")$value.upper, 2), nsmall=2)`\]).
 
 The conditional one-inflation (coi) component, which estimates, among boundary values, the probability of being 1 (vs. 0), also showed similar trends for the effect of condition. Participants were more likely to respond at ceiling for both the typical variation condition (*β*=`r format(round(filter(m.age_summary, parameter == "b_coi_conditionnaturalv")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_coi_conditionnaturalv")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_coi_conditionnaturalv")$value.upper, 2), nsmall=2)`\]) and consistent condition (*β*=`r format(round(filter(m.age_summary, parameter == "b_coi_conditionstable")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_coi_conditionstable")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_coi_conditionstable")$value.upper, 2), nsmall=2)`\]), relative to the atypical variation condition. While these condition effects remain uncertain given the credible interval overlap with zero, their alignment with estimates from the $\mu$ component suggests additional evidence for an advantage of both typical variation and consistency over atypical variation. The effect of age was clearly positive (*β*=`r format(round(filter(m.age_summary, parameter == "b_coi_age_c")$value, 2), nsmall=2)`, 89% CrI: \[`r format(round(filter(m.age_summary, parameter == "b_coi_age_c")$value.lower, 2), nsmall=2)`, `r format(round(filter(m.age_summary, parameter == "b_coi_age_c")$value.upper, 2), nsmall=2)`\]), indicating that older children were more likely to demonstrate 100% looking to the target object during the critical analysis windows.
 
@@ -412,132 +413,6 @@ We fit separate models for each post-labeling window. In the early time window (
 
 In the later window (following the second label), condition effects were also relatively weak. The estimate for the typical variation condition relative to atypical variation was *β* = `r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window2_summary, parameter == "b_conditionnaturalv")$value.upper, 2), nsmall = 2)`\]), and for the consistent condition: *β* = `r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value, 2), nsmall = 2)` (89% CrI: \[`r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value.lower, 2), nsmall = 2)`, `r format(round(filter(m.window2_summary, parameter == "b_conditionstable")$value.upper, 2), nsmall = 2)`\]).
 
-## Linear mixed-effects regression analyses
-```{r glmer-window}
-# prep data
-test.props <- read_csv("data/test-props.csv")
-test.props.bywindow <- read_csv("data/test-props-bywindow.csv")
-
-model.data <- test.props %>%
-  mutate(id=str_extract(pid, "[0-9][0-9][0-9]")) %>%
-  left_join(ages, by="id") %>%
-  mutate(condition=relevel(as.factor(condition), ref="unnaturalv"))
-
-model.data.bywindow <- test.props.bywindow %>%
-  mutate(id=str_extract(pid, "[0-9][0-9][0-9]")) %>%
-  left_join(ages, by="id") %>%
-  mutate(condition=relevel(as.factor(condition), ref="unnaturalv"))
-
-
-# explore window effects 
-## simplify models to deal with non-convergence
-m.window <- glmer(prop ~ condition + window + age_c + (1 | id), 
-               data = model.data.bywindow, 
-               family = binomial)
-
-m.window.int <- glmer(prop ~ condition * window + age_c + (1 | id), 
-               data = model.data.bywindow, 
-               family = binomial)
-
-m.window.comp <- anova(m.window, m.window.int) %>%
-  tidy() %>%
-  filter(term == "m.window.int")
-
-pred.window <- emmeans(m.window, ~ condition, 
-                    at = list(age_c = 0), type = "response") %>%
-  as_tibble()
-
-m.window.summary <- m.window %>%
-  tidy() %>%
-  filter(effect == "fixed", term != "(Intercept)") %>%
-  mutate(or = round(estimate, 2), 
-         se = round(std.error, 2), 
-         p = round(p.value, 3))
-
-m.window1 <- glmer(prop ~ condition + age_c + (1 | id), 
-                   data = filter(model.data.bywindow, window == "first"), 
-                   family = binomial)
-
-pred.window1 <- emmeans(m.window1, ~ condition, 
-                    at = list(age_c = 0), type = "response") %>%
-  as_tibble()
-
-m.window1.summary <- m.window1 %>%
-  tidy() %>%
-  filter(effect == "fixed", term != "(Intercept)") %>%
-  mutate(or = round(estimate, 2), 
-         se = round(std.error, 2), 
-         p = round(p.value, 3))
-
-m.window2 <- glm(prop ~ condition + age_c, 
-                   data = filter(model.data.bywindow, window == "second"), 
-                   family = binomial)
-
-pred.window2 <- emmeans(m.window2, ~ condition, 
-                    at = list(age_c = 0), type = "response") %>%
-  as_tibble()
-
-m.window2.summary <- m.window2 %>%
-  tidy() %>%
-  filter(term != "(Intercept)") %>%
-  mutate(or = round(estimate, 2), 
-         se = round(std.error, 2), 
-         p = round(p.value, 3))
-```
-In the main text, we reported effects from mixed-effects logistic regression models [@lme4] predicting the average proportion of target looking across the two post-labeling windows (following our pre-registration). Adding post-labeling window to the base model[^1] revealed no effect of window (*β* = `r format(round(filter(m.window.summary, term == "windowsecond")$or, 2), nsmall = 2)`, *SE* = `r format(filter(m.window.summary, term == "windowsecond")$se, nsmall = 2)`, *p* = `r format(filter(m.window.summary, term == "windowsecond")$p, nsmall = 3)`). In addition, adding an interaction between window and condition did not significantly improve the model fit ($\chi^2$(`r m.window.comp$df`) = `r round(m.window.comp$statistic, 2)`, *p* = `r round(m.window.comp$p.value, 3)`). **Figure S2** shows model-predicted accuracy across conditions, separately for the two post-labeling windows.
-
-```{r fig2, fig.cap="Figure S2. Model-predicted accuracy by condition across both post-labeling windows. Point ranges reflect estimated marginal means with 95% confidence intervals. Jittered dots show raw means for individual participants. The dashed line at 0.50 indicates chance performance.", fig.width=8, fig.height=5}
-
-raw_summary <- model.data.bywindow %>%
-  mutate(condition=factor(condition, levels=c("unnaturalv", "stable", "naturalv"))) %>%
-  group_by(pid, condition, window) %>%
-  summarize(prop=mean(prop)) %>%
-  ungroup() %>%
-  mutate(model=ifelse(window == "first", "Post-labeling window 1", "Post-labeling window 2"))
-
-pred_summary1 <- pred.window1  %>%
-  mutate(model="Post-labeling window 1") %>%
-  rename(mean = prob,
-         ci_lower = asymp.LCL, 
-         ci_upper = asymp.UCL)
-
-pred_summary2 <- pred.window2  %>%
-  mutate(model="Post-labeling window 2") %>%
-  rename(mean = prob,
-         ci_lower = asymp.LCL, 
-         ci_upper = asymp.UCL)
-
-pred_all <- bind_rows(pred_summary1, pred_summary2) %>%
-  mutate(
-    model=factor(model, levels=c("Post-labeling window 1", "Post-labeling window 2")),
-    condition=factor(condition, levels=c("unnaturalv", "stable", "naturalv"))
-  )
-
-fig2 <- ggplot(pred_all, aes(x=condition, y=mean, ymin=ci_lower, ymax=ci_upper, color=condition)) +
-  geom_hline(yintercept=0.5, linetype="dashed", color="gray") + 
-    geom_jitter(data=raw_summary, 
-                mapping=aes(x=condition, 
-                              y=prop, 
-                              color=condition), 
-              inherit.aes=FALSE, alpha=0.15,  width=0.05, size=1.5) + 
-  geom_point(size=3, position=position_dodge(width=0.5)) +
-  geom_errorbar(width=0.2, size=1.2, position=position_dodge(width=0.5)) +
-  facet_wrap(~model) +
-  scale_color_manual(values=condition.colors) +
-  scale_x_discrete(labels=c("Atypical\nvariation", 
-                              "Consistent", 
-                              "Typical\nvariation")) + 
-  labs(
-    x="Condition",
-    y="Model-predicted proportion\nlooking to target object",
-    color="Condition"
-  ) +
-  theme_custom()
-ggsave("FigureS2.png", fig2, width=8, height=5, dpi=300)
-knitr::include_graphics("FigureS2.png")
-```
-[^1]: glmer(prop. target looking ~ condition + window + age + (1 | id), family = binomial)
-  
 ## Cluster-based permutation analyses
 ```{r cluster-based-permutation, execute = FALSE}
 rerun.cbp = FALSE
@@ -654,11 +529,11 @@ p_obs <- mean(perm_cluster_aucs > max_cluster_obs$auc)
 }
 ```
 
-A cluster-based permutation test [@maris2007nonparametric] identified a marginal cluster from `r max_cluster_obs$start` to `r max_cluster_obs$stop`ms (AUC = `r max_cluster_obs$auc`), but this cluster did not reach significance compared to the permutation-based null distribution (p = `r p_obs`), suggesting at most a weak and transient effect of condition. **Figure S3** shows the full timecourse of participants' looks to the target object during test trials.
+A cluster-based permutation test [@maris2007nonparametric] identified a marginal cluster from `r max_cluster_obs$start` to `r max_cluster_obs$stop`ms (AUC = `r max_cluster_obs$auc`), but this cluster did not reach significance compared to the permutation-based null distribution (p = `r p_obs`), suggesting at most a weak and transient effect of condition. **Figure S2** shows the full timecourse of participants' looks to the target object during test trials.
 
-```{r fig3}
-#| label: fig3
-#| fig-cap: "Figure S3: Timecourse of participants' looks during test trials with shaded standard error regions. The black dashed line at 0.50 represents chance looking. The gray shaded regions indicate the critical analysis windows (300-2000ms) following target word onset."
+```{r fig2}
+#| label: fig2
+#| fig-cap: "Figure S2: Timecourse of participants' looks during test trials with shaded standard error regions. The black dashed line at 0.50 represents chance looking. The gray shaded regions indicate the critical analysis windows (300-2000ms) following target word onset."
 
 library(eyetrackingR)
 eyetrackingr.data <- eyetrackingr.data %>%
@@ -742,16 +617,16 @@ fig3 <- response_time %>%
         legend.title = element_blank(), 
         axis.title = element_text(face = "bold"))
 
-ggsave("FigureS3.png", fig3, width=8, height=5, dpi=300)
-knitr::include_graphics("FigureS3.png")
+ggsave("FigureS2.png", fig3, width=8, height=5, dpi=300)
+knitr::include_graphics("FigureS2.png")
 ```
 
 # Alternative pupillometry analyses
-Our main analyses compared toddlers' pupil size synchrony during the two types of exposure sentences that differed between conditions. We include below effects taking into account all four types of exposure sentences, in which synchrony is highest for the consistent condition.
+Our main analyses compared toddlers' pupil size synchrony during the two types of exposure sentences that differed between conditions (i.e., the two middle exposure sentences where variant labels were introduced). We include below effects taking into account all four types of exposure sentences (i.e., including the first and last exposure sentences which were the same across all conditions and only included the standard label). Results of this analysis suggest that synchrony was highest for the consistent condition, which differs from the key result reported in the main text, where synchrony was highest for the typical variation condition.
 
 ```{r pupillometry-sentence-level}
-#| label: fig4
-#| fig-cap: "Figure S4: Model-predicted sentence-level mean pupil size synchrony (z-scored) across conditions for all exposure sentences with 95\\% confidence intervals. Jittered points represent participant means."
+#| label: fig3
+#| fig-cap: "Figure S3: Model-predicted sentence-level mean pupil size synchrony (z-scored) across conditions for all exposure sentences with 95\\% confidence intervals. Jittered points represent participant means."
 sync_data <- read_csv("data/synchrony/combined/pupil-synchrony-all_sentence.csv") %>%
   group_by(participant, condition, word, exposure) %>%
   summarize(mean_synchrony = mean(synchrony, na.rm = TRUE), .groups = "drop") %>%
@@ -802,7 +677,7 @@ comparisons <- list(
 )
 y_positions <- max(sync_data$sync_z, na.rm=TRUE) - 1.5 + c(0, 0.5, 1)
 
-fig4 <- ggplot(em, aes(x=condition, fill=condition, color=condition)) +
+fig3 <- ggplot(em, aes(x=condition, fill=condition, color=condition)) +
     geom_jitter(data=sync_data,
                 mapping=aes(x=condition, y=sync_z),
                 width=0.2, alpha=0.2, size=1) +
@@ -826,15 +701,15 @@ fig4 <- ggplot(em, aes(x=condition, fill=condition, color=condition)) +
         y="Mean pupil size synchrony\n(z-scored)"
     ) +
     theme_custom()
-ggsave("FigureS4.png", fig4, width=8, height=5, dpi=300)
-knitr::include_graphics("FigureS4.png")
+ggsave("FigureS3.png", fig3, width=8, height=5, dpi=300)
+knitr::include_graphics("FigureS3.png")
 ```
 
-A one-way ANOVA revealed a significant main effect of condition on pupil size synchrony [*F*(2, `r round(anova_result$DenDF)`) = `r round(anova_result$"F value"[1], 2)`, *p* < 0.001]. Follow-up pairwise comparisons using Tukey's HSD correction indicated that pupil size synchrony was significantly higher in the consistent condition compared to the typical variation (ΔM = `r round(-pairs_sync$estimate[1], 2)`, *p* < 0.001, Cohen's *d* = `r round(-pairwise_es$effect.size[1], 2)`) and atypical variation conditions (ΔM = `r round(pairs_sync$estimate[3], 2)`, *p* < 0.001, Cohen's *d* = `r round(pairwise_es$effect.size[3], 2)`; **Figure S4**). No other pairwise comparisons were statistically significant (*p*s > 0.05). Linear mixed-effects model [@lme4] diagnostics indicated mild deviations from linearity and homogeneity of variance, as well as a cluster of influential observations, so results should be interpreted with caution. 
+A one-way ANOVA revealed a significant main effect of condition on pupil size synchrony [*F*(2, `r round(anova_result$DenDF)`) = `r round(anova_result$"F value"[1], 2)`, *p* < 0.001]. Follow-up pairwise comparisons using Tukey's HSD correction indicated that pupil size synchrony was significantly higher in the consistent condition compared to the typical variation (ΔM = `r round(-pairs_sync$estimate[1], 2)`, *p* < 0.001, Cohen's *d* = `r round(-pairwise_es$effect.size[1], 2)`) and atypical variation conditions (ΔM = `r round(pairs_sync$estimate[3], 2)`, *p* < 0.001, Cohen's *d* = `r round(pairwise_es$effect.size[3], 2)`; **Figure S3**). No other pairwise comparisons were statistically significant (*p*s > 0.05). Linear mixed-effects model [@lme4] diagnostics indicated mild deviations from linearity and homogeneity of variance, as well as a cluster of influential observations, so results should be interpreted with caution. 
 
 ```{r pupillometry-word-level}
-#| label: fig5
-#| fig-cap: "Figure S5: Model-predicted mean word-level pupil size synchrony (z-scored) across conditions with 95\\% confidence intervals. Jittered points represent participant means."
+#| label: fig4
+#| fig-cap: "Figure S4: Model-predicted mean word-level pupil size synchrony (z-scored) across conditions with 95\\% confidence intervals. Jittered points represent participant means."
 sync_data <- read_csv("data/synchrony/combined/pupil-synchrony-exp23.csv") %>%
   group_by(participant, condition, word, exposure) %>%
   summarize(mean_synchrony = mean(synchrony, na.rm = TRUE), .groups = "drop") %>%
@@ -912,10 +787,10 @@ fig5 <- ggplot(em, aes(x=condition, fill=condition, color=condition)) +
         y="Mean pupil size synchrony\n(z-scored)"
     ) +
     theme_custom()
-ggsave("FigureS5.png", fig5, width=8, height=5, dpi=300)
-knitr::include_graphics("FigureS5.png")
+ggsave("FigureS4.png", fig5, width=8, height=5, dpi=300)
+knitr::include_graphics("FigureS4.png")
 ```
-We also examined pupil size synchrony at the word level, focusing on the same exposure sentences as the main text. A one-way ANOVA revealed a significant main effect of condition on pupil size synchrony \[*F*(2, 314) = `r format(round(anova_result$"F value"[1], 2), nsmall = 2)`, *p* < 0.001\]. Follow-up pairwise comparisons using Tukey's HSD correction indicated that, relative to the consistent condition, pupil size synchrony was significantly higher in the atypical variation condition condition (ΔM = `r round(pairs_sync$estimate[1], 2)`, *p* < 0.001, Cohen's *d* = `r format(round(pairwise_es$effect.size[1], 2), nsmall = 2)`) and descriptively higher (but not significantly higher) in the typical variation condition (ΔM = `r round(-pairs_sync$estimate[3], 2)`, *p* = `r round(pairs_sync$p.value[3], 3)`, Cohen's *d* = `r round(pairwise_es$effect.size[3], 2)`). Synchrony was also significantly higher in the atypical variation condition relative to the typical variation condition (ΔM = `r round(pairs_sync$estimate[2], 2)`, *p* < 0.001, Cohen's *d* = `r round(pairwise_es$effect.size[2], 2)`; **Figure S5**).
+We also examined pupil size synchrony at the word level, focusing on the same exposure sentences as the main text. A one-way ANOVA revealed a significant main effect of condition on pupil size synchrony \[*F*(2, 314) = `r format(round(anova_result$"F value"[1], 2), nsmall = 2)`, *p* < 0.001\]. Follow-up pairwise comparisons using Tukey's HSD correction indicated that, relative to the consistent condition, pupil size synchrony was significantly higher in the atypical variation condition condition (ΔM = `r round(pairs_sync$estimate[1], 2)`, *p* < 0.001, Cohen's *d* = `r format(round(pairwise_es$effect.size[1], 2), nsmall = 2)`) and descriptively higher (but not significantly higher) in the typical variation condition (ΔM = `r round(-pairs_sync$estimate[3], 2)`, *p* = `r round(pairs_sync$p.value[3], 3)`, Cohen's *d* = `r round(pairwise_es$effect.size[3], 2)`). Synchrony was also significantly higher in the atypical variation condition relative to the typical variation condition (ΔM = `r round(pairs_sync$estimate[2], 2)`, *p* < 0.001, Cohen's *d* = `r round(pairwise_es$effect.size[2], 2)`; **Figure S4**).
 
 <!-- References will auto-populate in the refs div below -->
 
